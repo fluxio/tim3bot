@@ -8,7 +8,7 @@
     "build:min": "webpack -p",
     "clean": "rimraf public",
     "lint": "eslint src test",
-    "prepublish": "npm clean && npm run build:min",
+    "prepublish": "npm run clean && npm run build:min",
     "start": "node ./bin/www",
     "start:watch": "cross-env NODE_ENV=development HOT=true nodemon -w src/server -x 'npm start'",
     "test": "cross-env BABEL_ENV=commonjs mocha --compilers js:babel-register --recursive",
