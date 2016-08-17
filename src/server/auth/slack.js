@@ -2,6 +2,8 @@ const express = require('express');
 const passport = require('passport');
 const SlackStrategy = require('passport-slack').Strategy;
 
+const userRepo = require('../repos/user-repo');
+
 const config = require('../../../config/server-config');
 
 const router = new express.Router();
@@ -13,7 +15,18 @@ passport.use(new SlackStrategy({
   scope: 'chat:write:bot,dnd:read,dnd:write,emoji:read',
   extendedUserProfile: false,
 }, (accessToken, refreshToken, profile, done) => {
-  done(null, Object.assign({}, profile));
+  const slackId = profile.id;
+
+  userRepo
+    .findUser({ query: { slackId } })
+    .then(user => (
+      user || userRepo.createUser({
+        slackId,
+        name: profile.displayName,
+      })
+    ))
+    .catch(done)
+    .then(user => done(null, user));
 }));
 
 router.get('/', passport.authenticate('slack'));

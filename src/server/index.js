@@ -13,6 +13,8 @@ const RedisStore = require('connect-redis')(session);
 const authRouter = require('./auth');
 const apiRouter = require('./api');
 
+const userRepo = require('./repos/user-repo');
+
 const config = require('../../config/server-config');
 
 const app = express();
@@ -39,11 +41,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.serializeUser((user, done) => {
-  done(null, user);
+  done(null, user.id);
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
+passport.deserializeUser((id, done) => {
+  userRepo.findUser({ query: { id } })
+    .catch(done)
+    .then(user => done(null, user));
 });
 
 if (!config.DEBUG) {
