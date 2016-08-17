@@ -3,16 +3,18 @@ const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const config = require('./config/web-config');
+const webConfig = require('./config/web-config');
+const serverConfig = require('./config/server-config');
 
 const webpackConfig = {
-  debug: config.DEBUG,
-  devtool: config.DEBUG ? 'cheap-module-eval-source-map' : 'source-map',
+  debug: serverConfig.DEBUG,
+  devtool: serverConfig.DEBUG ? 'cheap-module-eval-source-map' : 'source-map',
   entry: ['./src/web/main.js'],
   output: {
     path: path.resolve(__dirname, './src/server/public'),
-    publicPath: config.HOT ? `http://localhost:${config.PORT}/` : '',
-    filename: config.DEBUG ? '[name].js' : '[name].[hash].js',
+    publicPath: serverConfig.HOT ? `http://localhost:${serverConfig.PROXY_PORT}/public/` : '/public/',
+    // publicPath: '/public/',
+    filename: serverConfig.DEBUG ? '[name].js' : '[name].[hash].js',
     chunkFileName: '[id].js',
   },
   module: {
@@ -42,18 +44,18 @@ const webpackConfig = {
       template: './src/web/index.html.tmpl',
     }),
     new webpack.DefinePlugin({
-      'process.env': JSON.stringify(config),
+      'process.env': JSON.stringify(webConfig),
     }),
     new webpack.NoErrorsPlugin(),
   ],
 };
 
-if (config.HOT) {
+if (serverConfig.HOT) {
   webpackConfig.entry.unshift('webpack-hot-middleware/client');
   webpackConfig.plugins.unshift(new webpack.HotModuleReplacementPlugin());
 }
 
-if (config.NODE_ENV === 'production') {
+if (serverConfig.NODE_ENV === 'production') {
   webpackConfig.plugins.unshift(new webpack.optimize.DedupePlugin());
   webpackConfig.plugins.unshift(new webpack.optimize.UglifyJsPlugin({
     compressor: {

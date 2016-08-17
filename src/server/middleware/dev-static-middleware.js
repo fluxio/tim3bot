@@ -1,12 +1,11 @@
-const url = require('url');
 const path = require('path');
 
 const webpack = require('webpack');
 const webpackDevMiddleware = require('webpack-dev-middleware');
 const webpackHotMiddleware = require('webpack-hot-middleware');
 
-const webpackConfig = require('../../webpack.config');
-const config = require('../../config/server-config');
+const webpackConfig = require('../../../webpack.config');
+const config = require('../../../config/server-config');
 
 const compiler = webpack(webpackConfig);
 const indexFilename = path.join(compiler.outputPath, 'index.html');
@@ -22,31 +21,34 @@ const applyWebpackDevMiddleware = webpackDevMiddleware(compiler, {
 
 const applyWebpackHotMiddleware = webpackHotMiddleware(compiler);
 
-function applyIndexMiddleware(req, res, next) {
-  if (url.parse(req.url).pathname === '/') {
-    compiler.outputFileSystem.readFile(indexFilename, (err, result) => {
-      if (err) {
-        next(err);
-      } else {
-        res.set('content-type', 'text/html');
-        res.send(result);
-      }
-    });
-  }
-}
-
-function devStaticMiddleware() {
+function staticMiddleware() {
   return (req, res, next) => {
     applyWebpackDevMiddleware(req, res, () => {
       if (config.HOT) {
-        applyWebpackHotMiddleware(req, res, () => {
-          applyIndexMiddleware(req, res, next);
-        });
+        applyWebpackHotMiddleware(req, res, next);
       } else {
-        applyIndexMiddleware(req, res, next);
+        next();
       }
     });
   };
 }
 
-module.exports = devStaticMiddleware;
+function indexMiddleware() {
+  return (req, res, next) => {
+    if (!req.is('json')) {
+      compiler.outputFileSystem.readFile(indexFilename, (err, result) => {
+        if (err) {
+          next(err);
+        } else {
+          res.set('content-type', 'text/html');
+          res.send(result);
+        }
+      });
+    }
+  };
+}
+
+module.exports = {
+  staticMiddleware,
+  indexMiddleware,
+};

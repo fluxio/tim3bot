@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 
-function LayoutView() {
+function LayoutView({ children }) {
   return (
-    <div>Meet tim3bot</div>
+    <div>
+      {children}
+    </div>
   );
 }
+
+LayoutView.propTypes = {
+  children: PropTypes.node,
+};
 
 export default LayoutView;

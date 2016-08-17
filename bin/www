@@ -1,11 +1,11 @@
 const config = require('../config/server-config');
 const app = require('../src/server');
 
-app.listen(config.PORT, err => {
+app.listen(config.API_PORT, err => {
   if (err) {
     console.error('Error starting server:', err);
   } else if (config.DEBUG) {
-    console.log(`Listening at http://localhost:${config.PORT}`);
+    console.log(`Listening at http://localhost:${config.API_PORT}`);
   } else {
     console.log('App started');
   }
