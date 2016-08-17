@@ -13,7 +13,12 @@ function handleResponse(response) {
     body = response.text();
   }
 
-  return body;
+  return {
+    body,
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  };
 }
 
 function handleError(response) {
@@ -33,6 +38,10 @@ function handleError(response) {
   return response;
 }
 
+function parseBody({ body }) {
+  return body;
+}
+
 function request(url, { headers, ...others } = {}) {
   return window.fetch(url, {
     credentials: 'include',
@@ -43,7 +52,8 @@ function request(url, { headers, ...others } = {}) {
     ...others,
   })
     .then(handleResponse)
-    .catch(handleError);
+    .then(handleError)
+    .then(parseBody);
 }
 
 export default request;

@@ -9,11 +9,14 @@ const API_ROOT = '/api';
 const API_PROFILE_PATH = joinUrl(API_ROOT, 'profile');
 
 // Auth URLs
-const SLACK_LOGIN_PATH = '/auth/slack';
+const AUTH_ROOT = '/auth';
+const SLACK_LOGIN_PATH = joinUrl(AUTH_ROOT, 'slack');
+const LOGOUT_PATH = joinUrl(AUTH_ROOT, 'logout');
 
 export {
   ROOT_PATH,
   LOGIN_PATH,
   API_PROFILE_PATH,
   SLACK_LOGIN_PATH,
+  LOGOUT_PATH,
 };
