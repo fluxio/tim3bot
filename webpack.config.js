@@ -12,7 +12,7 @@ const webpackConfig = {
   entry: ['./src/web/main.js'],
   output: {
     path: path.resolve(__dirname, './src/server/public'),
-    publicPath: serverConfig.HOT ? `http://localhost:${serverConfig.PROXY_PORT}/public/` : '/public/',
+    publicPath: serverConfig.HOT ? `http://${serverConfig.HOSTNAME}:${serverConfig.PROXY_PORT}/public/` : '/public/',
     // publicPath: '/public/',
     filename: serverConfig.DEBUG ? '[name].js' : '[name].[hash].js',
     chunkFileName: '[id].js',
