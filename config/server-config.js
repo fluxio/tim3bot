@@ -11,6 +11,7 @@ const secrets = {
   SESSION_SECRET: process.env.SESSION_SECRET || 'keyboard cat',
   SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID,
   SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET,
+  SLACK_API_TOKEN: process.env.SLACK_API_TOKEN,
 };
 
 if (baseConfig.env === 'production') {
