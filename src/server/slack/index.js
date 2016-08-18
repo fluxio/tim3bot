@@ -32,7 +32,7 @@ controller.hears(OPENERS, ['direct_message'], (bot, message) => {
 
     // If user has no tasks, get tasks.
 // If user has never had tasks, maybe
-    bot.reply(message, `Hi, ${name}, I\'m tim3bot.`);
+    bot.reply(message, `Hi, ${name}, I\'m *tim3bot* :stopwatch::robot_face::stopwatch:\nI’m gonna help you *stay focussed and improve time estimations* ... plus, I'll put an extra little spring in your step :dancer:`);
     getTasksFromUser(bot, message, user);
 
     // If user has tasks, show status.
@@ -60,18 +60,18 @@ let tasks = [];
 function getTaskPrompt() {
   switch (tasks.length) {
     case 0:
-      return `Let's track your top 3 priorities for the week. What's the first?`;
+      return `To get started, what’s your highest priority task right now?`;
     case 1:
-      return `What's your second priority for the week?`;
+      return `Thanks! What else is on your plate?`;
     case 2:
-      return `What's your third priority for the week?`;
+      return `Nice one! Let’s add one more task to your list.`;
   }
 }
 
 function getTasksFromUser(bot, message) {
   function askNewTask(response, convo) {
     convo.say(getTaskPrompt());
-    convo.ask('Please describe it in one line.', [
+    convo.ask('...:lower_left_paintbrush:', [
       {
         pattern: '.*',
         callback: (response, convo) => {
@@ -85,7 +85,7 @@ function getTasksFromUser(bot, message) {
   };
 
   function askEstimate(response, convo) {
-    convo.ask('How many days do you think this will take _(e.g. "1.5d")_?', [
+    convo.ask('Great! How many days will this take, e.g. `2.5`.', [
       {
         pattern: '.*([0-9]*\.?[0-9]+).*',
         callback: (response, convo) => {
@@ -114,9 +114,12 @@ function getTasksFromUser(bot, message) {
     askNewTask(response, convo);
     convo.on('end', convo => {
       if (convo.status == 'completed') {
-        bot.reply(message, `OK!`);
+        bot.reply(message, `Great!`);
         showTaskList(bot, message);
-        bot.reply(message, `I'll check in on how you're doing at the end of every day.`);
+        bot.reply(message, `You can see your tasks by saying \`list\` at anytime.\n` +
+        //Need to add joined list of tasks Here
+          'Use \`add\` to create new tasks. Type a number at the end to add an estimate, e.g. \`Add Fix the damn coffee machine 0.25\`.\nI’ll do a regular check-in on weekdays at 5pm, or say \`checkin\` to see what’s up.\nThat’s all for now. See you later! :spock-hand:'
+          );
       }
     });
   });
@@ -124,9 +127,9 @@ function getTasksFromUser(bot, message) {
 
 function showTaskList(bot, message) {
   if (tasks.length) {
-    bot.reply(message, 'Here are your top priorities for the week:\n' +
+    bot.reply(message, 'Here’s what you’ve got on your plate right now:\n' +
     tasks.map((task, index) => {
-      return `${index + 1}\) ${task.title} \(${dayFormat(task.estimate)} days\)`;
+      return `${index + 1}. ${task.title} \nEstimate: ${dayFormat(task.estimate)} days\n`;
     }).join('\n'));
   } else {
     bot.reply(message, `You don't have any tasks set up for the week, yet.`);
