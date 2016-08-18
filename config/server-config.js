@@ -5,7 +5,8 @@ const PROXY_PORT = process.env.PROXY_PORT || 4000;
 const API_PORT = process.env.PORT || process.env.API_PORT || 4001;
 const STATIC_PORT = process.env.STATIC_PORT || 4002;
 const REDIS_PORT = process.env.REDIS_PORT;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PROXY_PORT}`;
+const HOSTNAME = process.env.HOSTNAME || (baseConfig.DEBUG ? '0.0.0.0' : '');
+const BASE_URL = process.env.BASE_URL || `http://${HOSTNAME}:${PROXY_PORT}`;
 
 const secrets = {
   SESSION_SECRET: process.env.SESSION_SECRET || 'keyboard cat',
@@ -28,5 +29,6 @@ module.exports = Object.assign({}, baseConfig, secrets, {
   API_PORT,
   STATIC_PORT,
   REDIS_PORT,
+  HOSTNAME,
   BASE_URL,
 });

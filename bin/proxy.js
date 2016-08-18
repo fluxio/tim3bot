@@ -18,10 +18,10 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(config.PROXY_PORT, err => {
+server.listen(config.PROXY_PORT, config.HOSTNAME, err => {
   if (err) {
     console.error(err);
   } else {
-    console.log(`App listening at http://localhost:${config.PROXY_PORT}`);
+    console.log(`App listening at ${config.BASE_URL}`);
   }
 });
