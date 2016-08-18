@@ -26,6 +26,9 @@ const sessionStore = new RedisStore({
   client: redisClient,
 });
 
+// Starts the Slack bot
+require('./slack');
+
 app.use(logger('dev'));
 app.set('x-powered-by', false);
 app.use(bodyParser.json());

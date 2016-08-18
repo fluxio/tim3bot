@@ -6,29 +6,13 @@ const controller = Botkit.slackbot({
   debug: false,
 });
 
-const bots = {};
-
-function startBot(token = config.SLACK_API_TOKEN) {
-  if (!bots[token]) {
-    bots[token] = true;
-
-    controller.spawn({ token })
-      .startRTM(err => {
-        if (err) {
-          bots[token] = false;
-
-          throw err;
-        } else {
-          bots[token] = true;
-        }
-      });
-  }
-}
+controller.spawn({ token: config.SLACK_API_TOKEN })
+  .startRTM(err => {
+    if (err) {
+      throw err;
+    }
+  });
 
 controller.hears(['hi'], ['direct_message'], (bot, message) => {
   bot.reply(message, 'Hi yourself!');
 });
-
-module.exports = {
-  startBot,
-};

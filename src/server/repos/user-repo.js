@@ -1,5 +1,4 @@
 const knex = require('./knex');
-const slack = require('../slack');
 
 const USER_TABLE = 'users';
 
@@ -12,12 +11,6 @@ function createUser({ slackId, displayName, name }) {
         name: name || displayName,
       })
       .then(trx.commit)
-      .then(user => {
-        if (user) {
-          slack.startBot();
-        }
-        return user;
-      })
       .catch(trx.rollback)
   ));
 }
@@ -33,10 +26,6 @@ function findUser({ query = {}, select = ['id', 'name'] }) {
       .first(...select)
       .where(query)
       .then(trx.commit)
-      .then(user => {
-        slack.startBot();
-        return user;
-      })
       .catch(trx.rollback)
   ));
 }
