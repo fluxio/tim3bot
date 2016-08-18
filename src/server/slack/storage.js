@@ -14,12 +14,12 @@ function getUser(slackId, callback) {
     .catch(callback);
 }
 
-function saveUser(data, callback) {
+function saveUser(user, callback) {
   return userRepo
     .upsert({
-      data: { slackId: data.id },
+      data: { slackId: user.id },
     })
-    .then(user => callback(null, user))
+    .then(res => callback(null, res[0]))
     .catch(callback);
 }
 

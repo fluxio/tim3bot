@@ -57,7 +57,11 @@ class BaseRepo {
     const query = { [this._upsertIndex]: data[this._upsertIndex] };
 
     return this.selectOne({ query, select })
-      .then(entity => entity || this.create({ data, select }));
+      .then(entity => (
+        entity ||
+        this.create({ data, select })
+          .then(res => res[0])
+      ));
   }
 
   select({ query = {}, select } = {}) {
