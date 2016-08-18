@@ -48,7 +48,7 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-  userRepo.findUser({ query: { id } })
+  userRepo.selectOne({ query: { id } })
     .catch(done)
     .then(user => done(null, user));
 });

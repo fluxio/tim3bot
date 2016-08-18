@@ -2,7 +2,7 @@ const userRepo = require('../repos/user-repo');
 
 function getUser(slackId, callback) {
   return userRepo
-    .findUser({ query: slackId, select: 'name' })
+    .selectOne({ query: { slackId }, select: 'name' })
     .then(user => (Object.assign({}, user, { id: slackId })))
     .then(user => {
       if (!user) {
@@ -16,7 +16,7 @@ function getUser(slackId, callback) {
 
 function saveUser(data, callback) {
   return userRepo
-    .upsertUser({
+    .upsert({
       data: { slackId: data.id },
     })
     .then(user => callback(null, user))
@@ -25,7 +25,7 @@ function saveUser(data, callback) {
 
 function allUsers(callback) {
   return userRepo
-    .listUsers()
+    .select()
     .then(users => (
       users.map(user => (Object.assign({}, user, { id: user.slackId })))
     ))

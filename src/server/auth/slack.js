@@ -16,7 +16,7 @@ passport.use(new SlackStrategy({
   extendedUserProfile: false,
 }, (accessToken, refreshToken, profile, done) => {
   userRepo
-    .findOrCreateUser({
+    .findOrCreate({
       data: {
         slackId: profile.id,
         name: profile.displayName,

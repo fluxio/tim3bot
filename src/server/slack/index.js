@@ -17,5 +17,11 @@ controller.spawn({ token: config.SLACK_API_TOKEN })
   });
 
 controller.hears(['hi'], ['direct_message'], (bot, message) => {
-  bot.reply(message, 'Hi yourself!');
+  controller.storage.users.get(message.user, (err, user) => {
+    if (err) {
+      throw err;
+    } else {
+      bot.reply(message, `Hi yourself, ${user.name}!`);
+    }
+  });
 });
