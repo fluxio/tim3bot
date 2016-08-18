@@ -24,6 +24,7 @@
   $ createdb tim3bot
   ```
 1. Clone the repo and install the Node dependencies: `npm install`
+1. Create a new bot on Slack (we call ours "tim3bot").
 1. Set up your [environment](#environment)
 1. Start the server: `npm run start:watch`
 1. Navigate to http://localhost:4000
@@ -32,6 +33,7 @@
 
 * `SLACK_CLIENT_ID`: The Slack app's client ID
 * `SLACK_CLIENT_SECRET`: The Slack app's client secret
+* `SLACK_API_TOKEN`: The api token you get for your newly-created bot on Slack.
 * `DB_NAME`: The postgres database name, e.g., `tim3bot`
 * `DB_USER` *(optional, default: `postgres`)*: The postgres database user
 * `DB_PASSWORD` *(optional)*: The postgres database password
