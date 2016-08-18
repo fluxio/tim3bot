@@ -15,16 +15,13 @@ passport.use(new SlackStrategy({
   scope: 'chat:write:bot,dnd:read,dnd:write,emoji:read',
   extendedUserProfile: false,
 }, (accessToken, refreshToken, profile, done) => {
-  const slackId = profile.id;
-
   userRepo
-    .findUser({ query: { slackId } })
-    .then(user => (
-      user || userRepo.createUser({
-        slackId,
+    .findOrCreateUser({
+      data: {
+        slackId: profile.id,
         name: profile.displayName,
-      })
-    ))
+      },
+    })
     .catch(done)
     .then(user => done(null, user));
 }));

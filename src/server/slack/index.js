@@ -1,9 +1,12 @@
 const Botkit = require('botkit');
 
+const storage = require('./storage');
+
 const config = require('../../../config/server-config');
 
 const controller = Botkit.slackbot({
   debug: false,
+  storage,
 });
 
 controller.spawn({ token: config.SLACK_API_TOKEN })
