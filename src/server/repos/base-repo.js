@@ -80,12 +80,14 @@ class BaseRepo {
       ));
   }
 
-  select({ query = {}, orderBy = 'createdAt', select } = {}) {
+  select({ query = {}, excludeQuery = {}, orderBy = 'createdAt', select } = {}) {
+    console.info(query, excludeQuery);
     return knex.transaction(trx => (
       knex(this._table)
         .transacting(trx)
         .select(select || this._defaultSelect)
         .where(query)
+        .whereNot(excludeQuery)
         .orderBy(orderBy)
         .then(trx.commit)
         .catch(trx.rollback)

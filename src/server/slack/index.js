@@ -7,11 +7,19 @@ const taskRepo = require('../repos/task-repo');
 const config = require('../../../config/server-config');
 
 // Command matching strings.
-const OPENERS = ['hi', 'yo', 'status'];
+const OPENERS = ['hi', 'yo'];
 const LIST = ['list', 'tasks'];
 const HELP = ['help', 'commands'];
 const ADD = ['add', 'addtask.*'];
 const CHECKIN = ['checkin', 'log', 'update'];
+const SCORE = ['score', 'status'];
+
+const STATE = {
+  COMPLETE: 'complete', // Update to 'complete' after column is enum-ified.
+  INCOMPLETE: 'incomplete',
+  ABANDONED: 'abandoned',
+};
+
 
 const controller = Botkit.slackbot({
   debug: false,
@@ -69,6 +77,10 @@ controller.hears(CHECKIN, ['direct_message'], (bot, message) => {
       modifyTasks(bot, message);
   //  });
   });
+});
+
+controller.hears(SCORE, ['direct_message'], (bot, message) => {
+  showScore(bot, message);
 });
 
 // Helper functions for all ensuing conversations.
@@ -158,7 +170,7 @@ function modifyTasks(bot, message, callback) {
       callback: (askResponse, convo) => {
         return taskRepo.update({
           query: { id: task.id },
-          data: { completed: true },
+          data: { state: STATE.COMPLETE },
         })
           .then(() => {
             showTaskList(bot, message, () => {
@@ -321,7 +333,7 @@ function initializeTask(bot, message, taskString, callback) {
 }
 
 function showTaskList(bot, message, callback) {
-  getTasksForSlackUser(message.user)
+  getTasksForSlackUser(message.user, {incompleteOnly: true})
     .then(tasks => {
       if (tasks.length) {
         const taskList = tasks.map((task, index) => {
@@ -333,11 +345,9 @@ function showTaskList(bot, message, callback) {
             } else {
               workedStr = `worked ${dayFormat(task.daysSpent)} of ` + workedStr;
             }
-          } else {
-
           }
           return `*${index + 1}. ${task.title}* \n\t_\(${workedStr}\)_ ` +
-              (task.completed ? 'COMPLETED' : '')
+              (task.state === STATE.COMPLETE ? 'COMPLETED' : '')
         }).join('\n');
 
         bot.reply(message, `This is what your list looks like right now:\n${taskList}`);
@@ -354,14 +364,69 @@ function showTaskList(bot, message, callback) {
     });
 }
 
+function showScore(bot, message) {
+  getTasksForSlackUser(message.user, { completeOnly: true }).then(tasks => {
+    let completedTasksStr = tasks.map(task => {
+      const score = computeScore([task]);
+      const grade = computeGrade(score);
+      const workedStr =
+          `Done in ${dayFormat(task.daysSpent)} days. ` +
+          `Estimated ${dayFormat(task.daysEstimated)} days. ` +
+          `Score: ${score}% - ${grade}.`;
+      return `*:white_check_mark: ${task.title}* \n\t_\(${workedStr}\)_`;
+    }).join('\n');
+
+    const score = computeScore(tasks);
+    const grade = computeGrade(score);
+    bot.reply(message,
+        'Based on your completed tasks, your *tim3bot certified reliability score* is... ' +
+        `:trophy:  *${score}% - ${grade}* :trophy:\n` +
+        completedTasksStr);
+  });
+}
+
+function computeScore(tasks) {
+  let totals = tasks.reduce((totals, task, index) => {
+    totals.totalEstimated += task.daysEstimated;
+    totals.totalSpent += task.daysSpent;
+    return totals;
+  }, { totalEstimated: 0, totalSpent: 0 });
+  if (totals.totalSpent === 0) {
+    return 1;
+  } else {
+    return Math.round(totals.totalEstimated / totals.totalSpent * 100);
+  }
+}
+
+function computeGrade(score) {
+  let suffix = '';
+
+  if (score % 10 > (10 / 6) || score === 100) {
+    suffix = '+';
+  } else if (score % 10 < (10 / 3)) {
+    suffix = '-';
+  }
+
+  if (score >= 90) {
+    return `A${suffix}`;
+  } else if (score >= 80) {
+    return `B${suffix}`;
+  } else if (score >= 70) {
+    return `C${suffix}`;
+  } else if (score >= 60) {
+    return `D${suffix}`;
+  } else {
+    return 'F';
+  }
+}
+
 function showHelp(bot, message) {
-  const helpMessage = `Ok, I'm here. It's all under control!
-Here's a list of things you can say to start moving my sweet robotic cogs:
-\t:heavy_plus_sign: \`add\` with a description and a day estimate creates a whole new task.
+  const helpMessage = `Ok! Get my sweet robotic cogs moving with these commands:
 \t:clipboard: \`list\` displays all the tasks you have entered.
-\t:bellhop_bell: \`checkin\` will begin a little check-in session.
+\t:heavy_plus_sign: \`add\` with a description and a day estimate creates a whole new task.
+\t:bellhop_bell: \`checkin\` will begin a quick check-in session. Update and manage your tasks.
 \t:trophy: \`score\` will display your TIM3BOT Certified Reliability Score.
-\t:heavy_check_mark: \`done\` after logging time during check-in will mark a task as completed.`;
+\t:question: \`help\` ...and of course this is how you got here :smile:`;
 
   bot.reply(message, helpMessage);
 }
@@ -380,10 +445,24 @@ function getUser(slackId) {
   return userRepo.selectOne({ query: { slackId: slackId } });
 }
 
-function getTasksForUser(user) {
-  return taskRepo.select({ query: { userId: user.id } });
+function getTasksForUser(user, { completeOnly = false, incompleteOnly = false } = {}) {
+  if (completeOnly && incompleteOnly) {
+    new Error('Both "completeOnly" and "incompleteOnly" options were set to true. ' +
+        'No more than one may be true.')
+  }
+  let query = { userId: user.id };
+  let excludeQuery;
+
+  if (completeOnly) {
+    query.state = STATE.COMPLETE;
+  } else if (incompleteOnly) {
+    query.state = STATE.INCOMPLETE;
+  } else {
+    excludeQuery = { state: STATE.ABANDONED };
+  }
+  return taskRepo.select({ query: query, excludeQuery: excludeQuery });
 }
 
-function getTasksForSlackUser(slackId) {
-  return getUser(slackId).then(user => getTasksForUser(user));
+function getTasksForSlackUser(slackId, { completeOnly = false, incompleteOnly = false } = {}) {
+  return getUser(slackId).then(user => getTasksForUser(user, arguments[1]));
 }
