@@ -39,10 +39,15 @@ const webpackConfig = {
       test: /\.json$/,
       loader: 'json',
     }, {
-      test: /\.(png|jpe?g|gif|svg)$/,
+      test: /\.(png|jpe?g|gif)$/,
       include: __dirname,
       exclude: /node_modules/,
       loaders: ['file', 'image-webpack'],
+    }, {
+      test: /\.svg$/,
+      include: [__dirname, path.resolve(__dirname, 'assets')],
+      exclude: /node_modules/,
+      loader: 'babel!react-svg',
     }],
   },
   postcss: [
