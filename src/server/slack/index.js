@@ -337,15 +337,9 @@ function showTaskList(bot, message, callback) {
     .then(tasks => {
       if (tasks.length) {
         const taskList = tasks.map((task, index) => {
-          let workedStr = `estimated ${dayFormat(task.daysEstimated)} days`;
-          if (task.daysSpent) {
-            if (task.daysSpent > task.daysEstimated) {
-              workedStr = `worked ${dayFormat(task.daysSpent - task.daysEstimated)} ` +
-                  `days beyond ` + workedStr;
-            } else {
-              workedStr = `worked ${dayFormat(task.daysSpent)} of ` + workedStr;
-            }
-          }
+          const workedStr =
+              `Estimated ${dayFormat(task.daysEstimated)}. ` +
+              `${dayFormat(task.daysSpent)} worked so far. `;
           return `*${index + 1}. ${task.title}* \n\t_\(${workedStr}\)_ ` +
               (task.state === STATE.COMPLETE ? 'COMPLETED' : '')
         }).join('\n');
@@ -370,8 +364,8 @@ function showScore(bot, message) {
       const score = computeScore([task]);
       const grade = computeGrade(score);
       const workedStr =
-          `Done in ${dayFormat(task.daysSpent)} days. ` +
-          `Estimated ${dayFormat(task.daysEstimated)} days. ` +
+          `Done in ${dayFormat(task.daysSpent)}. ` +
+          `Estimated ${dayFormat(task.daysEstimated)}. ` +
           `Score: ${score}% - ${grade}.`;
       return `*:white_check_mark: ${task.title}* \n\t_\(${workedStr}\)_`;
     }).join('\n');
@@ -434,9 +428,10 @@ function showHelp(bot, message) {
 function dayFormat(floatNumDays) {
   if (typeof floatNumDays !== 'number') { return ''; }
   let daysStr = floatNumDays.toString();
-  let daysParts = daysStr.split('.');
-  return daysParts.length === 1 ? daysStr :
-      (daysParts[1].length === 1 ? floatNumDays.toFixed(1) : floatNumDays.toFixed(2));
+  const daysParts = daysStr.split('.');
+  daysStr = (daysParts.length === 1 ? daysStr :
+      (daysParts[1].length === 1 ? floatNumDays.toFixed(1) : floatNumDays.toFixed(2)));
+  return daysStr + (Math.round(floatNumDays * 100) === 100 ? ' day' : ' days');
 }
 
 // Data access.
