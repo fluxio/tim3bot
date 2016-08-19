@@ -11,6 +11,7 @@ const OPENERS = ['hi', 'yo', 'status'];
 const FIRST_TASK = "To get started, what's your highest priority task?";
 const SECOND_TASK = 'Thanks! What else is on your plate?';
 const THIRD_TASK = "Nice one! Let's add one more task.";
+const NTH_TASK = 'What do you want to add next?';
 
 const INITIALIZED_TASKS = `You can see your tasks by saying \`list\` at anytime.
 Use \`add\` to create new tasks. Type a number at the end to add an estimate, \
@@ -101,10 +102,14 @@ controller.hears(['help', 'commands'], ['direct_message'], (bot, message) => {
   showHelp(bot, message);
 });
 
+// Add a single task.
 controller.hears(['add', 'addtask.*'], ['direct_message'], (bot, message) => {
-  // Add a single task.
-  showTaskList(bot, message);
-  initializeTasksForUser(bot, message);
+  showTaskList(bot, message, () => {
+    userRepo.selectOne({ query: { slackId: message.user } })
+      .then(user => {
+        initializeTask(bot, message, user, NTH_TASK);
+      });
+  });
 });
 
 function initializeTasksForUser(bot, message, callback) {
@@ -184,7 +189,7 @@ function initializeTask(bot, message, user, taskString, callback) {
   }
 }
 
-function showTaskList(bot, message) {
+function showTaskList(bot, message, callback) {
   userRepo.selectOne({ query: { slackId: message.user } })
     .then(user => (
       taskRepo.select({ query: { userId: user.id } })
@@ -198,6 +203,11 @@ function showTaskList(bot, message) {
         bot.reply(message, `Here’s what you've got on your plate right now:\n${taskList}`);
       } else {
         bot.reply(message, "You don't have any tasks set up for the week yet.");
+      }
+    })
+    .then(() => {
+      if (callback) {
+        callback();
       }
     });
 }
