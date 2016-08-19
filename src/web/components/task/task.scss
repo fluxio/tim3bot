@@ -21,12 +21,17 @@
   margin: $sm-margin 0;
 }
 
-.warning {
+.successBar {
+  background-color: $green;
+  height: 100%;
+}
+
+.warningBar {
   background-color: $yellow;
   height: 100%;
 }
 
-.danger {
+.dangerBar {
   background-color: $red;
   height: 100%;
 }

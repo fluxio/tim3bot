@@ -23,7 +23,14 @@ router.get('/profile', (req, res) => {
 router.get('/tasks', (req, res, next) => {
   taskRepo.select({
     query: { userId: req.user.id },
-    select: ['id', 'title', 'createdAt', 'estimate', 'daysSpent'],
+    select: [
+      'id',
+      'title',
+      'createdAt',
+      'estimate',
+      'daysSpent',
+      'state',
+    ],
   })
     .then(normalize)
     .then(tasks => res.json(tasks))

@@ -1,5 +1,7 @@
 import { PropTypes } from 'react';
 
+import { TASK_STATES } from './constants/task-states';
+
 const user = {
   id: PropTypes.number.isRequired,
   name: PropTypes.string.isRequired,
@@ -13,6 +15,7 @@ const task = {
   createdAt: PropTypes.any.isRequired,
   estimate: PropTypes.number.isRequired,
   daysSpent: PropTypes.number.isRequired,
+  state: PropTypes.oneOf(TASK_STATES).isRequired,
 };
 
 const taskShape = PropTypes.shape(task);
