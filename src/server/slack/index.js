@@ -8,6 +8,16 @@ const config = require('../../../config/server-config');
 
 // Conversation strings.
 const OPENERS = ['hi', 'yo', 'status'];
+const FIRST_TASK = "To get started, what's your highest priority task?";
+const SECOND_TASK = 'Thanks! What else is on your plate?';
+const THIRD_TASK = "Nice one! Let's add one more task.";
+
+const INITIALIZED_TASKS = `You can see your tasks by saying \`list\` at anytime.
+Use \`add\` to create new tasks. Type a number at the end to add an estimate, \
+e.g. \`add Fix the damn coffee machine 0.25\`.
+I’ll do a regular check-in on weekdays at 5pm, or use \`checkin\` at anytime.
+Type \`help\` to see a list of commands.
+That’s all for now. See you later! :spock-hand:`;
 
 const controller = Botkit.slackbot({
   debug: false,
@@ -32,9 +42,9 @@ controller.hears(OPENERS, ['direct_message'], (bot, message) => {
       getTasksForUser(user)
         .then(tasks => {
           if (!tasks.length) {
-            initializeTasksForUser(bot, message, user);
+            initializeTasksForUser(bot, message);
           } else {
-            showTaskList(bot, message, user, tasks);
+            showTaskList(bot, message);
           }
         });
     }
@@ -72,7 +82,7 @@ plus, I'll put an extra little spring in your step :dancer:`;
 
     conversation.on('end', convo => {
       if (convo.status === 'completed') {
-        callback(bot, message, user);
+        callback(bot, message);
       }
     });
   });
@@ -97,24 +107,21 @@ controller.hears(['add', 'addtask.*'], ['direct_message'], (bot, message) => {
   initializeTasksForUser(bot, message);
 });
 
-function initializeTasksForUser(bot, message, user, callback) {
-  initializeTask(bot, message, user, "To get started, what's your highest priority task?", () => {
-    initializeTask(bot, message, user, 'Thanks! What else is on your plate?', () => {
-      initializeTask(bot, message, user, "Nice one! Let's add one more task.", () => {
-        const completedMessage = `You can see your tasks by saying \`list\` at anytime.
-Use \`add\` to create new tasks. Type a number at the end to add an estimate, e.g. \`add Fix the damn coffee machine 0.25\`.
-I’ll do a regular check-in on weekdays at 5pm, or use \`checkin\` at anytime.
-Type \`help\` to see a list of commands.
-That’s all for now. See you later! :spock-hand:`
+function initializeTasksForUser(bot, message, callback) {
+  userRepo.selectOne({ query: { slackId: message.user } })
+    .then(user => {
+      initializeTask(bot, message, user, FIRST_TASK, () => {
+        initializeTask(bot, message, user, SECOND_TASK, () => {
+          initializeTask(bot, message, user, THIRD_TASK, () => {
+            bot.reply(message, INITIALIZED_TASKS);
 
-        bot.reply(message, completedMessage);
-
-        if (callback) {
-          callback();
-        }
+            if (callback) {
+              callback();
+            }
+          });
+        });
       });
     });
-  });
 }
 
 function initializeTask(bot, message, user, taskString, callback) {
