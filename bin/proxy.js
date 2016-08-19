@@ -18,6 +18,12 @@ const server = http.createServer((req, res) => {
   }
 });
 
+proxy.on('error', (err, req, res) => {
+  if (err.code === 'ECONNREFUSED') {
+    res.end(JSON.stringify({ message: 'Server is down!' }));
+  }
+});
+
 server.listen(config.PROXY_PORT, config.HOSTNAME, err => {
   if (err) {
     console.error(err);

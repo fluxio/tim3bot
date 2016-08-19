@@ -40,9 +40,14 @@ router.get('/tasks', (req, res, next) => {
     .catch(next);
 });
 
+
 router.post('/tasks', (req, res, next) => {
+  const task = Object.assign({}, req.body, {
+    userId: req.user.id,
+  });
+
   taskRepo.create({
-    data: req.body,
+    data: task,
     select: TASK_SELECT,
   })
     .then(response => res.json(response[0]))
