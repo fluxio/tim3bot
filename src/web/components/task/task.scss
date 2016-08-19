@@ -6,7 +6,7 @@
 .title,
 .description {
   width: 100%;
-  color: $dark-grey;
+  color: $black;
 }
 
 .description {
@@ -33,4 +33,12 @@
 .dangerBar {
   background-color: $red;
   height: 100%;
+}
+
+.completeTask {
+  background-color: transparent;
+  border: 0;
+  color: $dark-grey;
+  margin-left: 1rem;
+  cursor: pointer;
 }

@@ -6,7 +6,7 @@ import Task from './task';
 import NewTask from './new-task';
 import { taskShape } from '../lib/shapes';
 
-function TaskList({ tasks, createTask }) {
+function TaskList({ tasks, createTask, completeTask }) {
   return (
     <Card label="Your Tasks">
       <OrderedList>
@@ -14,6 +14,7 @@ function TaskList({ tasks, createTask }) {
           <Task
             key={index}
             task={task}
+            completeTask={completeTask}
           />
         ))}
       </OrderedList>

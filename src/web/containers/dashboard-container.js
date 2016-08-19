@@ -5,6 +5,7 @@ import DashboardView from '../components/dashboard-view';
 import {
   fetchTasks,
   createTask,
+  completeTask,
 } from '../actions';
 import { getSortedTasks } from '../selectors';
 import { taskShape } from '../lib/shapes';
@@ -18,7 +19,7 @@ class DashboardContainer extends Component {
   componentDidMount() {
     this.props.fetchTasks();
 
-    this.refetch();
+    // this.refetch();
   }
 
   refetch() {
@@ -34,12 +35,11 @@ class DashboardContainer extends Component {
   }
 
   render() {
-    const { tasks } = this.props;
-
-    return tasks ? (
+    return this.props.tasks ? (
       <DashboardView
-        tasks={tasks}
+        tasks={this.props.tasks}
         createTask={this.props.createTask}
+        completeTask={this.props.completeTask}
       />
     ) : null;
   }
@@ -48,6 +48,7 @@ class DashboardContainer extends Component {
 DashboardContainer.propTypes = {
   fetchTasks: PropTypes.func.isRequired,
   createTask: PropTypes.func.isRequired,
+  completeTask: PropTypes.func.isRequired,
   tasks: PropTypes.arrayOf(taskShape).isRequired,
   fetching: PropTypes.object.isRequired,
 };
@@ -62,4 +63,5 @@ function mapStateToProps(state) {
 export default connect(mapStateToProps, {
   fetchTasks,
   createTask,
+  completeTask,
 })(DashboardContainer);

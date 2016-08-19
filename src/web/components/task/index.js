@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 
 import { ListItem } from '../../base-components/list';
 import { taskShape } from '../../lib/shapes';
@@ -42,7 +42,9 @@ ${pluralizeDays(daysUnder)} under estimate`;
   return description;
 }
 
-function Task({ task }) {
+const completeTaskMessage = 'Complete \u2714';
+
+function Task({ task, completeTask }) {
   const { title, daysEstimated, state, daysSpent } = task;
   const description = getDescription(task);
   const barWidth = Math.min(Math.max(daysSpent, daysEstimated) * 15, 60);
@@ -56,6 +58,11 @@ function Task({ task }) {
     <ListItem>
       <div className={styles.title}>
         {title}
+        {state === INCOMPLETE ? (
+          <button onClick={completeTask.bind(null, task)} className={styles.completeTask}>
+            {completeTaskMessage}
+          </button>
+        ) : null}
       </div>
       <div className={styles.bar} style={{ width: `${barWidth}em` }}>
         <div className={completedClassName} style={{ width: `${warningWidth}%` }} />
@@ -70,6 +77,7 @@ function Task({ task }) {
 
 Task.propTypes = {
   task: taskShape.isRequired,
+  completeTask: PropTypes.func.isRequired,
 };
 
 export default Task;

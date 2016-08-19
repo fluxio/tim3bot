@@ -29,6 +29,18 @@ router.get('/profile', (req, res) => {
   });
 });
 
+router.post('/tasks/:id', (req, res, next) => {
+  taskRepo
+    .update({
+      query: { id: req.params.id },
+      data: req.body,
+      select: TASK_SELECT,
+    })
+    .then(response => response[0])
+    .then(task => { res.json(task); })
+    .catch(next);
+});
+
 router.get('/tasks', (req, res, next) => {
   taskRepo.select({
     query: { userId: req.user.id },
@@ -39,7 +51,6 @@ router.get('/tasks', (req, res, next) => {
     .then(tasks => res.json(tasks))
     .catch(next);
 });
-
 
 router.post('/tasks', (req, res, next) => {
   const task = Object.assign({}, req.body, {
