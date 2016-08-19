@@ -14,9 +14,17 @@ function getDescription({ daysEstimated, daysSpent, state }) {
   let description = '';
 
   if (state === INCOMPLETE) {
-    const estimateLeft = daysEstimated - daysSpent;
-    description = `Logged ${pluralizeDays(daysSpent)}, \
-${pluralizeDays(estimateLeft)} of work remaining`;
+    if (daysSpent > daysEstimated) {
+      const daysOver = daysSpent - daysEstimated;
+
+      description = `Logged ${pluralizeDays(daysSpent)}, \
+  ${pluralizeDays(daysOver)} over estimate`;
+    } else {
+      const estimateLeft = daysEstimated - daysSpent;
+
+      description = `Logged ${pluralizeDays(daysSpent)}, \
+  ${pluralizeDays(estimateLeft)} of work remaining`;
+    }
   } else if (daysSpent > daysEstimated) {
     const daysOver = daysSpent - daysEstimated;
 
