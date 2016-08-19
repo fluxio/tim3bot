@@ -25,14 +25,9 @@ controller.spawn({ token: config.SLACK_API_TOKEN })
 controller.hears(OPENERS, ['direct_message'], (bot, message) => {
   controller.storage.users.get(message.user, (err, user) => {
     if (!user) {
-      const welcomeMessage = `Hi, ${user.name}, I'm *TIM3BOT* :stopwatch:robot_face:stopwatch:
-I'm gonna hel you stay focused and improve your time estimations... \
-plus, I'll put an extra little spring in your step :dancer:`;
-
-      bot.reply(message, welcomeMessage);
       initializeUser(bot, message, initializeTasksForUser);
     } else {
-      bot.reply(message, `Welcome back, ${user.name}!`)
+      bot.reply(message, `Welcome back, ${user.name}!`);
 
       getTasksForUser(user)
         .then(tasks => {
@@ -47,7 +42,12 @@ plus, I'll put an extra little spring in your step :dancer:`;
 });
 
 function initializeUser(bot, message, callback) {
-  bot.reply(message, "Hi there! I'm tim3bot.");
+  const welcomeMessage = `Hi, I'm *TIM3BOT* :stopwatch:robot_face:stopwatch:
+I'm gonna help you stay focused and improve your time estimations... \
+plus, I'll put an extra little spring in your step :dancer:`;
+  let user = null;
+
+  bot.reply(message, welcomeMessage);
 
   bot.startConversation(message, (err, conversation) => {
     conversation.ask("What's your name?", [{
@@ -61,14 +61,20 @@ function initializeUser(bot, message, callback) {
             slackId: responseMessage.user,
           },
         })
-          .then(user => {
-            convo.say(`Great! Nice to meet you, ${user.name}`);
+          .then(res => {
+            user = res[0];
+
+            convo.say(`Great! Nice to meet you, ${user.name}. Let's get started!`);
             convo.next();
           });
       },
     }]);
 
-    conversation.on('end', () => callback(bot, message, callback));
+    conversation.on('end', convo => {
+      if (convo.status === 'completed') {
+        callback(bot, message, user);
+      }
+    });
   });
 }
 
@@ -94,7 +100,19 @@ controller.hears(['add', 'addtask.*'], ['direct_message'], (bot, message) => {
 function initializeTasksForUser(bot, message, user, callback) {
   initializeTask(bot, message, user, "To get started, what's your highest priority task?", () => {
     initializeTask(bot, message, user, 'Thanks! What else is on your plate?', () => {
-      initializeTask(bot, message, user, "Nice one! Let's add one more task.", callback);
+      initializeTask(bot, message, user, "Nice one! Let's add one more task.", () => {
+        const completedMessage = `You can see your tasks by saying \`list\` at anytime.
+Use \`add\` to create new tasks. Type a number at the end to add an estimate, e.g. \`add Fix the damn coffee machine 0.25\`.
+I’ll do a regular check-in on weekdays at 5pm, or use \`checkin\` at anytime.
+Type \`help\` to see a list of commands.
+That’s all for now. See you later! :spock-hand:`
+
+        bot.reply(message, completedMessage);
+
+        if (callback) {
+          callback();
+        }
+      });
     });
   });
 }
@@ -110,10 +128,6 @@ function initializeTask(bot, message, user, taskString, callback) {
     conversation.on('end', convo => {
       if (convo.status === 'completed' && callback) {
         bot.reply(message, 'Great!');
-        bot.reply(message, `You can see your tasks by saying \`list\` at anytime.\n` +
-          // Need to add joined list of tasks Here
-          'Use \`add\` to create new tasks. Type a number at the end to add an estimate, e.g. \`add Fix the damn coffee machine 0.25\`.\nI’ll do a regular check-in on weekdays at 5pm, or use \`checkin\` at anytime. Type \`help\` to see a list of commands.\nThat’s all for now. See you later! :spock-hand:'
-        );
 
         callback();
       }
@@ -170,7 +184,6 @@ function showTaskList(bot, message) {
     ))
     .then(tasks => {
       if (tasks.length) {
-        console.log('tasks:', tasks)
         const taskList = tasks.map((task, index) => (
           `${index + 1}. ${task.title}\n\tEstimate: ${dayFormat(task.estimate)} days`
         )).join('\n');
