@@ -33,6 +33,9 @@ class BaseRepo {
   }
 
   update({ query = {}, data = {}, select } = {}) {
+    console.log('updating with...')
+    console.log('query:', query)
+    console.log('data:', data)
     return knex.transaction(trx => (
       knex(this._table)
         .transacting(trx)
@@ -64,11 +67,23 @@ class BaseRepo {
       ));
   }
 
-  select({ query = {}, select } = {}) {
+  select({ query = {}, orderBy = 'createdAt', select } = {}) {
     return knex.transaction(trx => (
       knex(this._table)
         .transacting(trx)
         .select(select || this._defaultSelect)
+        .where(query)
+        .orderBy(orderBy)
+        .then(trx.commit)
+        .catch(trx.rollback)
+    ));
+  }
+
+  count({ query = {}, column = 'id' } = {}) {
+    return knex.transaction(trx => (
+      knex(this._table)
+        .transacting(trx)
+        .count(column)
         .where(query)
         .then(trx.commit)
         .catch(trx.rollback)
