@@ -11,7 +11,7 @@ const TASK_SELECT = [
   'createdAt',
   'daysEstimated',
   'daysSpent',
-  'completed',
+  'state',
 ];
 
 function normalize(entities) {

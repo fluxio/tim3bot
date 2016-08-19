@@ -2,7 +2,7 @@ import React from 'react';
 
 import { ListItem } from '../../base-components/list';
 import { taskShape } from '../../lib/shapes';
-import { IN_PROGRESS } from '../../lib/constants/task-states';
+import { INCOMPLETE } from '../../lib/constants/task-states';
 
 import styles from './task.scss';
 
@@ -10,10 +10,10 @@ function pluralizeDays(numDays) {
   return numDays === 1 ? `${numDays} day` : `${numDays} days`;
 }
 
-function getDescription({ daysEstimated, daysSpent, completed }) {
+function getDescription({ daysEstimated, daysSpent, state }) {
   let description = '';
 
-  if (!completed) {
+  if (state === INCOMPLETE) {
     const estimateLeft = daysEstimated - daysSpent;
     description = `Logged ${pluralizeDays(daysSpent)}, \
 ${pluralizeDays(estimateLeft)} of work remaining`;
@@ -35,14 +35,14 @@ ${pluralizeDays(daysUnder)} under estimate`;
 }
 
 function Task({ task }) {
-  const { title, daysEstimated, completed, daysSpent } = task;
+  const { title, daysEstimated, state, daysSpent } = task;
   const description = getDescription(task);
   const barWidth = Math.min(Math.max(daysSpent, daysEstimated) * 15, 60);
   const dangerWidth = daysSpent < daysEstimated ? 0 :
     ((daysSpent - daysEstimated) / daysSpent) * 100;
   const warningWidth = dangerWidth ? 100 - dangerWidth : (daysSpent / daysEstimated) * 100;
 
-  const completedClassName = completed ? styles.successBar : styles.warningBar;
+  const completedClassName = state !== INCOMPLETE ? styles.successBar : styles.warningBar;
 
   return (
     <ListItem>

@@ -156,7 +156,7 @@ function modifyTasks(bot, message, callback) {
       callback: (askResponse, convo) => {
         return taskRepo.update({
           query: { id: task.id },
-          data: { completed: true },
+          data: { state: 'complete' },
         })
           .then(() => {
             convo.repeat();
@@ -331,7 +331,7 @@ function showTaskList(bot, message, callback) {
 
           }
           return `*${index + 1}. ${task.title}* \n\t_\(${workedStr}\)_ ` +
-              (task.completed ? 'COMPLETED' : '')
+              (task.state === 'complete' ? 'COMPLETED' : '')
         }).join('\n');
 
         bot.reply(message, `Here’s what you've got on your plate right now:\n${taskList}`);

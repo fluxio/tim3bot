@@ -2,7 +2,7 @@ const BaseRepo = require('./base-repo');
 
 const TASK_TABLE = 'tasks';
 
-const DEFAULT_SELECT = ['id', 'title', 'daysEstimated', 'daysSpent', 'completed'];
+const DEFAULT_SELECT = ['id', 'title', 'daysEstimated', 'daysSpent', 'state'];
 
 class TaskRepo extends BaseRepo {
   constructor() {
