@@ -1,0 +1,23 @@
+@import '../../base-components/lib/styles/colours';
+@import '../../base-components/lib/styles/flex';
+@import '../../base-components/lib/styles/dimensions';
+@import '../../base-components/lib/styles/font';
+
+.navbar {
+  @include flex();
+  @include justify-content(space-between);
+  @include align-items(center);
+  width: 100%;
+  background-color: $blue;
+  color: $white;
+  padding: $standard-padding;
+}
+
+.brand {
+  font-size: $xl-font-size;
+}
+
+.navbarLink {
+  color: $white;
+  text-transform: uppercase;
+}

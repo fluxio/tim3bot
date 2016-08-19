@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, IndexRoute } from 'react-router';
 
-import LayoutView from '../components/layout-view';
+import LayoutContainer from '../containers/layout-container';
 import DashboardContainer from '../containers/dashboard-container';
 import LoginView from '../components/login-view';
 
@@ -39,7 +39,7 @@ function redirectIfAuthed(nextState, replace, callback) {
 export default (
   <Route
     path={ROOT_PATH}
-    component={LayoutView}
+    component={LayoutContainer}
   >
     <IndexRoute
       component={DashboardContainer}

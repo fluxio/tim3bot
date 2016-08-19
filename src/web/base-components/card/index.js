@@ -10,15 +10,17 @@ function Card({ label, children }) {
           {label}
         </div>
       ) : null}
-      <div className={styles.content}>
-        {children}
-      </div>
+      {children ? (
+        <div className={styles.content}>
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
 
 Card.propTypes = {
-  label: PropTypes.string,
+  label: PropTypes.node,
   children: PropTypes.node,
 };
 

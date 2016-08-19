@@ -1,0 +1,14 @@
+@import '../../base-components/lib/styles/flex';
+
+.container {
+  @include flex();
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.content {
+  @include flex();
+  @include grow(1);
+  width: 100%;
+}

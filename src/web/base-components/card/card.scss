@@ -18,6 +18,8 @@
 .card {
   margin: $standard-margin;
   border: 1px solid $grey;
+  width: 100%;
+  flex-direction: column;
 }
 
 .label {

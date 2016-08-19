@@ -19,6 +19,11 @@ function fetchProfile() {
           dispatch(setCurrentUser({ ...profile }));
 
           return profile;
+        })
+        .catch(() => {
+          dispatch(setCurrentUser({}));
+
+          return {};
         });
     }
 
