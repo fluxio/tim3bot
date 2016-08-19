@@ -45,7 +45,18 @@ function fetchTasks() {
   );
 }
 
+function createTask(task) {
+  return dispatch => (
+    dispatch(callApi({
+      key: entityKeys.TASKS_KEY,
+      method: methods.CREATE,
+      request: () => (api.createTask(task))
+    }))
+  );
+}
+
 export {
   fetchProfile,
   fetchTasks,
+  createTask,
 };

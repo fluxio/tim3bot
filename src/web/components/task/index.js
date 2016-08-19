@@ -1,4 +1,4 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
 
 import { ListItem } from '../../base-components/list';
 import { taskShape } from '../../lib/shapes';

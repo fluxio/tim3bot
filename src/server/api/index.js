@@ -5,6 +5,15 @@ const taskRepo = require('../repos/task-repo');
 
 const router = new express.Router();
 
+const TASK_SELECT = [
+  'id',
+  'title',
+  'createdAt',
+  'estimate',
+  'daysSpent',
+  'state',
+];
+
 function normalize(entities) {
   return entities.reduce((accumulator, entity) => (
     Object.assign({}, accumulator, { [entity.id]: entity })
@@ -23,17 +32,19 @@ router.get('/profile', (req, res) => {
 router.get('/tasks', (req, res, next) => {
   taskRepo.select({
     query: { userId: req.user.id },
-    select: [
-      'id',
-      'title',
-      'createdAt',
-      'estimate',
-      'daysSpent',
-      'state',
-    ],
+    select: TASK_SELECT,
   })
     .then(normalize)
     .then(tasks => res.json(tasks))
+    .catch(next);
+});
+
+router.post('/tasks', (req, res, next) => {
+  taskRepo.create({
+    data: req.body,
+    select: TASK_SELECT,
+  })
+    .then(response => res.json(response[0]))
     .catch(next);
 });
 

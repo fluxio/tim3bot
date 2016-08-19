@@ -7,7 +7,7 @@ export const LOGIN_PATH = '/login';
 // API paths
 const API_ROOT = '/api';
 export const API_PROFILE_PATH = joinUrl(API_ROOT, 'profile');
-export const API_LIST_TASKS_PATH = joinUrl(API_ROOT, 'tasks');
+export const API_TASKS_PATH = joinUrl(API_ROOT, 'tasks');
 
 // Auth URLs
 const AUTH_ROOT = '/auth';

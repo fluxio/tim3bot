@@ -1,0 +1,61 @@
+@import '../../base-components/lib/styles/flex';
+@import '../../base-components/lib/styles/colours';
+@import '../../base-components/lib/styles/font';
+@import '../../base-components/lib/styles/dimensions';
+
+.newTask,
+.form,
+.fieldset {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.form {
+  border: 0;
+}
+
+.title {
+  width: 100%;
+  color: $dark-grey;
+}
+
+.submit {
+  margin-right: $lg-margin;
+  border-radius: 50%;
+  border: 0;
+  background-color: $blue;
+  color: $white;
+  height: 1.5rem;
+  width: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+  &[disabled] {
+    background-color: $grey;
+    color: $black;
+    cursor: default;
+  }
+}
+
+.label,
+.input {
+  width: 100%;
+  margin: $sm-margin 0;
+}
+
+.label {
+  font-style: italic;
+  font-size: $sm-font-size;
+}
+
+.fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.input {
+  width: 20rem;
+}

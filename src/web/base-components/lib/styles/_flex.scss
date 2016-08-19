@@ -1,6 +1,7 @@
 @mixin flex() {
   display: flex;
   flex-wrap: wrap;
+  align-items: baseline;
 }
 
 @mixin shrink($value) {

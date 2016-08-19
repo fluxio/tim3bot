@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import DashboardView from '../components/dashboard-view';
 import {
   fetchTasks,
+  createTask,
 } from '../actions';
 import { getSortedTasks } from '../selectors';
 import { taskShape } from '../lib/shapes';
@@ -22,7 +23,10 @@ class DashboardContainer extends Component {
     const { tasks } = this.props;
 
     return tasks ? (
-      <DashboardView tasks={tasks} />
+      <DashboardView
+        tasks={tasks}
+        createTask={this.props.createTask}
+      />
     ) : null;
   }
 }
@@ -35,9 +39,11 @@ function mapStateToProps(state) {
 
 DashboardContainer.propTypes = {
   fetchTasks: PropTypes.func.isRequired,
+  createTask: PropTypes.func.isRequired,
   tasks: PropTypes.arrayOf(taskShape).isRequired,
 };
 
 export default connect(mapStateToProps, {
   fetchTasks,
+  createTask,
 })(DashboardContainer);

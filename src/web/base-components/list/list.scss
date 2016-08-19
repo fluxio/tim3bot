@@ -4,6 +4,8 @@
 
 .ordered {
   padding: 0;
+  display: flex;
+  flex-wrap: wrap;
 
   .listItem {
     counter-increment: step-counter;
@@ -11,14 +13,13 @@
     margin: $sm-margin 0;
     @include flex();
 
-    &:first-child,
-    &:last-child {
+    &:first-child {
       margin: 0;
     }
 
     &:before {
       content: counter(step-counter);
-      margin-right: 20px;
+      margin-right: $lg-margin;
       border-radius: 50%;
       border: 1px solid $black;
       width: 1.5rem;

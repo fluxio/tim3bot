@@ -42,13 +42,16 @@ function parseBody({ body }) {
   return body;
 }
 
-function request(url, { headers, ...others } = {}) {
+function request(url, { headers, body, ...others } = {}) {
+  const bodyObj = body ? { body: JSON.stringify(body) } : null;
+
   return window.fetch(url, {
     credentials: 'include',
     headers: {
       'content-type': 'application/json',
       ...headers,
     },
+    ...bodyObj,
     ...others,
   })
     .then(handleResponse)
