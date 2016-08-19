@@ -13,7 +13,7 @@ const task = {
   id: PropTypes.number.isRequired,
   title: PropTypes.string.isRequired,
   createdAt: PropTypes.any.isRequired,
-  estimate: PropTypes.number.isRequired,
+  daysEstimated: PropTypes.number.isRequired,
   daysSpent: PropTypes.number.isRequired,
   state: PropTypes.oneOf(TASK_STATES).isRequired,
 };

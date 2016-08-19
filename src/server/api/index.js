@@ -9,7 +9,7 @@ const TASK_SELECT = [
   'id',
   'title',
   'createdAt',
-  'estimate',
+  'daysEstimated',
   'daysSpent',
   'state',
 ];

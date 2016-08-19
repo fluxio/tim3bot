@@ -4,7 +4,7 @@ import styles from './new-task.scss';
 
 const defaultState = {
   title: '',
-  estimate: '',
+  daysEstimated: '',
   isValid: false,
 };
 
@@ -22,10 +22,10 @@ class NewTask extends Component {
   handleSubmit(e) {
     e.preventDefault();
 
-    const { isValid, title, estimate } = this.state;
+    const { isValid, title, daysEstimated } = this.state;
 
     if (isValid) {
-      this.props.createTask({ title, estimate });
+      this.props.createTask({ title, daysEstimated });
 
       this.setState(defaultState);
     }
@@ -38,29 +38,29 @@ class NewTask extends Component {
       title,
       isValid: this.validate({
         title,
-        estimate: this.state.estimate,
+        daysEstimated: this.state.daysEstimated,
       }),
     });
   }
 
   updateEstimate(e) {
-    const estimate = e.target.value;
+    const daysEstimated = e.target.value;
 
     this.setState({
-      estimate,
+      daysEstimated,
       isValid: this.validate({
-        estimate,
+        daysEstimated,
         title: this.state.title,
       }),
     });
   }
 
-  validate({ title, estimate }) {
-    return title && !Number.isNaN(Number(estimate));
+  validate({ title, daysEstimated }) {
+    return title && !Number.isNaN(Number(daysEstimated));
   }
 
   render() {
-    const { isValid, title, estimate } = this.state;
+    const { isValid, title, daysEstimated } = this.state;
 
     return (
       <div className={styles.newTask}>
@@ -86,15 +86,15 @@ class NewTask extends Component {
               placeholder="Make something fancy!"
             />
             <label
-              htmlFor="estimate"
+              htmlFor="daysEstimated"
               className={styles.label}
             >
               How long do you think it will take? (In days)
             </label>
             <input
-              id="title"
+              id="daysEstimated"
               className={styles.input}
-              value={estimate}
+              value={daysEstimated}
               onChange={this._updateEstimate}
               placeholder="1.5"
             />

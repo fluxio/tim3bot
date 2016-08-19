@@ -10,13 +10,13 @@ function pluralizeDays(numDays) {
   return numDays === 1 ? 'day' : 'days';
 }
 
-function Task({ task: { title, estimate, state } }) {
+function Task({ task: { title, daysEstimated, state } }) {
   const daysSpent = 3;
   const description = `\
-${estimate} ${pluralizeDays(estimate)} estimated, \
+${daysEstimated} ${pluralizeDays(daysEstimated)} estimated, \
 ${daysSpent} ${pluralizeDays(daysSpent)} logged`;
-  const dangerWidth = daysSpent > estimate ? ((daysSpent - estimate) / daysSpent) * 100 : 0;
-  const warningWidth = dangerWidth ? 100 - dangerWidth : (2 / estimate) * 100;
+  const dangerWidth = daysSpent > daysEstimated ? ((daysSpent - daysEstimated) / daysSpent) * 100 : 0;
+  const warningWidth = dangerWidth ? 100 - dangerWidth : (2 / daysEstimated) * 100;
 
   const completedClassName = state === IN_PROGRESS ? styles.warningBar : styles.successBar;
 
