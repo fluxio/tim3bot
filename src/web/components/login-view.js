@@ -19,7 +19,7 @@ function LoginView() {
       }}
     >
       <div style={{ width: '100%', textAlign: 'center' }}>
-        <img src={splash} alt="Welcome to tim3bot" style={{ maxWidth: 1000 }} />
+        <img src={splash} alt="Welcome to tim3bot" style={{ maxWidth: 1000, width: '100%' }} />
       </div>
       <a href={SLACK_LOGIN_PATH} style={{ marginTop: '-6rem' }}>
         <img
