@@ -63,17 +63,134 @@ controller.hears(ADD, ['direct_message'], (bot, message) => {
 });
 
 controller.hears(CHECKIN, ['direct_message'], (bot, message) => {
-  getTasksForSlackUser(message.user).then(tasks => {
-    console.info(tasks);
-    // if (!tasks.length) {
-    //   initializeTasksForUser(bot, message);
-    // } else {
-    //   showTaskList(bot, message);
-    // }
+  getUser(message.user).then(user => {
+    bot.reply(message, `Hey ${user.name}! Let's take a minute to review your progress.`);
+    showTaskList(bot, message, () => {
+      modifyTasks(bot, message);
+    });
   });
 });
 
 // Helper functions for all ensuing conversations.
+
+function modifyTasks(bot, message, callback) {
+  const WHICH_TASK =
+      `Choose a task above that you've worked on, is complete, or that you'd like to delete. ` +
+      'Type `done` to end this checkin.';
+
+  let tasks = null;
+
+  getTasksForSlackUser(message.user).then(userTasks => {
+    bot.startConversation(message, (response, conversation) => {
+      tasks = userTasks;
+      selectTask(response, conversation);
+
+      conversation.on('end', convo => {
+        if (convo.state === 'completed' && callback) {
+          bot.reply(message, 'All done!');
+          callback();
+        }
+      });
+    });
+  });
+
+  function selectTask(response, conversation) {
+    conversation.ask(WHICH_TASK, [{
+      pattern: '([0-9]+)',
+      callback: (askResponse, convo) => {
+        const taskNumber = parseInt(askResponse.match[0]);
+        let task = tasks[taskNumber - 1];
+        if (!task) {
+          convo.say('Oops! Please indicate a valid task number.');
+        } else {
+          actOnTask(askResponse, convo, task);
+        }
+        convo.next();
+      },
+    }, {
+      pattern: 'done',
+      callback: (askResponse, convo) => {
+        convo.say('Thanks for checking in!');
+        convo.next();
+      },
+    }, {
+      pattern: '.*',
+      callback: (askResponse, convo) => {
+        convo.say('Oops! Please indicate a task number, e.g. `2` for the second task.');
+        convo.repeat();
+        convo.next();
+      },
+    }]);
+  }
+
+  function actOnTask(response, conversation, task) {
+    let titleBits = task.title.split(' ');
+    let truncatedTitle = (titleBits.length > 4 ?
+        titleBits.slice(0,4).join(' ') + '...' :
+        task.title);
+    let prompt = `Add how much you worked on _"${truncatedTitle}"_, today, ` +
+        'e.g. `worked .5` if you spent a half day on it. ' +
+        'You can also mark the task `complete`, `delete` it, ' +
+        'or type `next` to update a different task.';
+
+    conversation.ask(prompt, [{
+      pattern: 'worked\\s+([0-9]*\.?[0-9]+).*',
+      callback: (askResponse, convo) => {
+        if (askResponse.match && askResponse.match[1]) {
+          const daysSpent = parseFloat(askResponse.match[1]);
+          return taskRepo.update({
+            query: { id: task.id },
+            data: { daysSpent: (task.daysSpent + daysSpent) },
+          })
+            .then(() => {
+              convo.repeat();
+              convo.next();
+            });
+        } else {
+          convo.repeat();
+          convo.next();
+        }
+      },
+    }, {
+      pattern: 'complete',
+      callback: (askResponse, convo) => {
+        return taskRepo.update({
+          query: { id: task.id },
+          data: { state: 'completed' },
+        })
+          .then(() => {
+            convo.repeat();
+            convo.next();
+          });
+      },
+    }, {
+      pattern: 'delete',
+      callback: (askResponse, convo) => {
+        return taskRepo.delete({
+          query: { id: task.id },
+        })
+          .then(() => {
+            convo.repeat();
+            convo.next();
+          });
+      },
+    }, {
+      pattern: 'next',
+      callback: (askResponse, convo) => {
+        selectTask(askResponse, convo);
+        convo.next();
+      },
+    }, {
+      pattern: '.*',
+      callback: (askResponse, convo) => {
+        convo.say(`Sorry, didn't recognize that action.`)
+        convo.repeat();
+        convo.next();
+      },
+    }]);
+  }
+}
+
 
 function initializeUser(bot, message, callback) {
   const welcomeMessage = `Hi, I'm *TIM3BOT* :stopwatch:robot_face:stopwatch:
@@ -110,16 +227,6 @@ plus, I'll put an extra little spring in your step :dancer:`;
       }
     });
   });
-}
-
-function getUser(slackId) {
-  return userRepo.selectOne({ query: { slackId: slackId } });
-}
-
-function getTasksForSlackUser(slackId) {
-  return getUser(slackId).then(user => (
-    taskRepo.select({ query: { userId: user.id } })
-  ));
 }
 
 function initializeTasksForUser(bot, message, callback) {
@@ -186,11 +293,11 @@ function initializeTask(bot, message, taskString, callback) {
     conversation.ask('Great! How many days will this take, e.g. `2.5`?', [{
       pattern: '.*([0-9]*\.?[0-9]+).*',
       callback: (askResponse, convo) => {
-        const estimate = parseFloat(askResponse.match[0]);
+        const daysEstimated = parseFloat(askResponse.match[0]);
 
         return taskRepo.update({
           query: { id: task.id },
-          data: { estimate },
+          data: { daysEstimated },
         })
           .then(() => {
             convo.next();
@@ -211,9 +318,21 @@ function showTaskList(bot, message, callback) {
   getTasksForSlackUser(message.user)
     .then(tasks => {
       if (tasks.length) {
-        const taskList = tasks.map((task, index) => (
-          `${index + 1}. ${task.title}\n\tEstimate: ${dayFormat(task.estimate)} days`
-        )).join('\n');
+        const taskList = tasks.map((task, index) => {
+          let workedStr = `estimated ${dayFormat(task.daysEstimated)} days`;
+          if (task.daysSpent) {
+            if (task.daysSpent > task.daysEstimated) {
+              workedStr = `worked ${dayFormat(task.daysSpent - task.daysEstimated)} ` +
+                  `days beyond ` + workedStr;
+            } else {
+              workedStr = `worked ${dayFormat(task.daysSpent)} of ` + workedStr;
+            }
+          } else {
+
+          }
+          return `*${index + 1}. ${task.title}* \n\t_\(${workedStr}\)_ ` +
+              (task.state === 'completed' ? 'COMPLETED' : '')
+        }).join('\n');
 
         bot.reply(message, `Here’s what you've got on your plate right now:\n${taskList}`);
       } else {
@@ -227,12 +346,6 @@ function showTaskList(bot, message, callback) {
     });
 }
 
-function dayFormat(floatNumDays) {
-  const daysStr = floatNumDays.toString();
-
-  return daysStr.indexOf('.') >= 0 ? floatNumDays.toFixed(2) : daysStr;
-}
-
 function showHelp(bot, message) {
   const helpMessage = `Ok, I'm here. It's all under control!
 Here's a list of things you can say to start moving my sweet robotic cogs:
@@ -243,4 +356,26 @@ Here's a list of things you can say to start moving my sweet robotic cogs:
 \t:heavy_check_mark: \`done\` after logging time during check-in will mark a task as completed.`;
 
   bot.reply(message, helpMessage);
+}
+
+function dayFormat(floatNumDays) {
+  if (typeof floatNumDays !== 'number') { return ''; }
+  let daysStr = floatNumDays.toString();
+  let daysParts = daysStr.split('.');
+  return daysParts.length === 1 ? daysStr :
+      (daysParts[1].length === 1 ? floatNumDays.toFixed(1) : floatNumDays.toFixed(2));
+}
+
+// Data access.
+
+function getUser(slackId) {
+  return userRepo.selectOne({ query: { slackId: slackId } });
+}
+
+function getTasksForUser(user) {
+  return taskRepo.select({ query: { userId: user.id } });
+}
+
+function getTasksForSlackUser(slackId) {
+  return getUser(slackId).then(user => getTasksForUser(user));
 }

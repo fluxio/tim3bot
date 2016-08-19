@@ -46,6 +46,19 @@ class BaseRepo {
     ));
   }
 
+  delete({ query = {}, select } = {}) {
+    console.log('deleting with...')
+    console.log('query:', query)
+    return knex.transaction(trx => (
+      knex(this._table)
+        .transacting(trx)
+        .where(query)
+        .delete()
+        .then(trx.commit)
+        .catch(trx.rollback)
+    ));
+  }
+
   upsert({ data = {}, select } = {}) {
     const query = { [this._upsertIndex]: data[this._upsertIndex] };
 
