@@ -19,6 +19,7 @@ const config = require('../../config/server-config');
 
 const app = express();
 const redisClient = redis.createClient({
+  url: config.REDIS_URL,
   port: config.REDIS_PORT,
 });
 
@@ -55,7 +56,7 @@ passport.deserializeUser((id, done) => {
 
 if (config.NODE_ENV === 'production') {
   app.use((req, res, next) => {
-    if (req.protocol === 'http') {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
       res.redirect(`https://${req.headers.host}${req.url}`);
     } else {
       next();
@@ -63,14 +64,15 @@ if (config.NODE_ENV === 'production') {
   });
 }
 
-if (!config.DEBUG) {
-  app.use(express.static(path.join(__dirname, 'public')));
-  app.use('/public', express.static(path.join(__dirname, 'public')));
-}
-
 app.use('/auth', authRouter);
 
 app.use('/api', apiRouter);
+
+if (!config.DEBUG) {
+  app.use(express.static(path.join(__dirname, 'public')));
+  app.use('/public', express.static(path.join(__dirname, 'public')));
+  app.use('/', express.static(path.join(__dirname, 'public')));
+}
 
 if (config.DEBUG) {
   app.use(errorHandler());
