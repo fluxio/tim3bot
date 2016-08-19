@@ -17,6 +17,20 @@ class DashboardContainer extends Component {
 
   componentDidMount() {
     this.props.fetchTasks();
+
+    this.refetch();
+  }
+
+  refetch() {
+    const self = this;
+
+    setTimeout(() => {
+      if (!self.props.fetching.tasks) {
+        self.props.fetchTasks();
+      }
+
+      self.refetch();
+    }, 2000);
   }
 
   render() {
@@ -31,17 +45,19 @@ class DashboardContainer extends Component {
   }
 }
 
-function mapStateToProps(state) {
-  return {
-    tasks: getSortedTasks(state),
-  };
-}
-
 DashboardContainer.propTypes = {
   fetchTasks: PropTypes.func.isRequired,
   createTask: PropTypes.func.isRequired,
   tasks: PropTypes.arrayOf(taskShape).isRequired,
+  fetching: PropTypes.object.isRequired,
 };
+
+function mapStateToProps(state) {
+  return {
+    fetching: state.entities.fetching,
+    tasks: getSortedTasks(state),
+  };
+}
 
 export default connect(mapStateToProps, {
   fetchTasks,

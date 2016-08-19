@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux';
 
 import {
+  API_REQUEST,
   API_SUCCESS,
   API_FAILURE,
 } from '../lib/constants/actions';
@@ -42,7 +43,7 @@ function entities(key) {
 function handleError(state, { type, payload = {} } = {}) {
   let newMessage = '';
 
-  if (type === API_FAILURE && payload.error) {
+  if (type === API_FAILURE) {
     const { status, message } = payload.error || {};
 
     if (status === 401 || status === 403) {
@@ -55,7 +56,27 @@ function handleError(state, { type, payload = {} } = {}) {
   return newMessage;
 }
 
+function fetching(state = {}, { type, payload = {} }) {
+  const { key } = payload;
+  let newState = state;
+
+  if (type === API_REQUEST) {
+    newState = {
+      ...state,
+      [key]: true,
+    };
+  } else if (type === API_SUCCESS || type === API_FAILURE) {
+    newState = {
+      ...state,
+      [key]: false,
+    };
+  }
+
+  return newState;
+}
+
 export default combineReducers({
+  fetching,
   [entityKeys.USERS_KEY]: entities(entityKeys.USERS_KEY),
   [entityKeys.TASKS_KEY]: entities(entityKeys.TASKS_KEY),
   error: handleError,

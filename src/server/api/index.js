@@ -34,6 +34,7 @@ router.get('/tasks', (req, res, next) => {
     query: { userId: req.user.id },
     select: TASK_SELECT,
   })
+    .then(tasks => tasks.filter(task => !!task.daysEstimated))
     .then(normalize)
     .then(tasks => res.json(tasks))
     .catch(next);

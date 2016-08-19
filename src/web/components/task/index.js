@@ -28,7 +28,7 @@ ${pluralizeDays(daysOver)} over estimate`;
     description = `Completed in ${pluralizeDays(daysSpent)}, \
 ${pluralizeDays(daysUnder)} under estimate`;
   } else {
-    description = `Completed in ${pluralizeDays()}, right on estimate \u{1f638}`;
+    description = `Completed in ${pluralizeDays(daysSpent)}, right on estimate \u{1f638}`;
   }
 
   return description;
