@@ -25,9 +25,14 @@ controller.spawn({ token: config.SLACK_API_TOKEN })
 controller.hears(OPENERS, ['direct_message'], (bot, message) => {
   controller.storage.users.get(message.user, (err, user) => {
     if (!user) {
+      const welcomeMessage = `Hi, ${user.name}, I'm *TIM3BOT* :stopwatch:robot_face:stopwatch:
+I'm gonna hel you stay focused and improve your time estimations... \
+plus, I'll put an extra little spring in your step :dancer:`;
+
+      bot.reply(message, welcomeMessage);
       initializeUser(bot, message, initializeTasksForUser);
     } else {
-      bot.reply(message, `Hi, ${user.name}, I\'m *TIM3BOT* :stopwatch::robot_face::stopwatch:\nI'm gonna help you stay focused and improve time estimations... plus, I'll put an extra little spring in your step :dancer:`);
+      bot.reply(message, `Welcome back, ${user.name}!`)
 
       getTasksForUser(user)
         .then(tasks => {
@@ -167,7 +172,7 @@ function showTaskList(bot, message) {
       if (tasks.length) {
         console.log('tasks:', tasks)
         const taskList = tasks.map((task, index) => (
-          `${index + 1}. ${task.title} \(Estimate: ${dayFormat(task.estimate)} days\)`
+          `${index + 1}. ${task.title}\n\tEstimate: ${dayFormat(task.estimate)} days`
         )).join('\n');
 
         bot.reply(message, `Here’s what you've got on your plate right now:\n${taskList}`);
@@ -184,7 +189,13 @@ function dayFormat(floatNumDays) {
 }
 
 function showHelp(bot, message) {
-  bot.reply(message, 'OK. I\'m here. It\'s all under control!\nHere\'s a list of things you can say to start moving my sweet robotic cogs:\n:heavy_plus_sign:\`add\` with a description and a day estimate creates a whole new task.\n\:clipboard:`list\` displays all the tasks you have entered.\n:bellhop_bell:\`checkin\` will begin a little check-in session.\n:trophy:`score\` will display your TIM3BOT Certified Reliability Score.\n:heavy_check_mark:\`done\` after logging time during Check-in will mark a task as completed.\n'
+  const helpMessage = `Ok, I'm here. It's all under control!
+Here's a list of things you can say to start moving my sweet robotic cogs:
+\t:heavy_plus_sign: \`add\` with a description and a day estimate creates a whole new task.
+\t:clipboard: \`list\` displays all the tasks you have entered.
+\t:bellhop_bell: \`checkin\` will begin a little check-in session.
+\t:trophy: \`score\` will display your TIM3BOT Certified Reliability Score.
+\t:heavy_check_mark: \`done\` after logging time during check-in will mark a task as completed.`;
 
-    );
+  bot.reply(message, helpMessage);
 }
