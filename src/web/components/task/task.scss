@@ -1,0 +1,32 @@
+@import '../../base-components/lib/styles/flex';
+@import '../../base-components/lib/styles/colours';
+@import '../../base-components/lib/styles/font';
+@import '../../base-components/lib/styles/dimensions';
+
+.title,
+.description {
+  width: 100%;
+  color: $dark-grey;
+}
+
+.description {
+  font-size: $sm-font-size;
+}
+
+.bar {
+  @include flex();
+  border: 1px solid $black;
+  height: 1rem;
+  width: 20rem;
+  margin: $sm-margin 0;
+}
+
+.warning {
+  background-color: $yellow;
+  height: 100%;
+}
+
+.danger {
+  background-color: $red;
+  height: 100%;
+}

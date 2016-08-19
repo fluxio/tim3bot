@@ -4,6 +4,8 @@ import { browserHistory } from 'react-router';
 
 import { DEBUG } from './lib/config';
 
+import './main.scss';
+
 const root = document.getElementById('root');
 
 function renderApp() {

@@ -1,0 +1,33 @@
+@import '../lib/styles/colours';
+@import '../lib/styles/dimensions';
+@import '../lib/styles/font';
+@import '../lib/styles/flex';
+
+.card,
+.label,
+.content {
+  @include flex();
+}
+
+.label,
+.content {
+  @include shrink(0);
+  width: 100%;
+}
+
+.card {
+  margin: $standard-margin;
+  border: 1px solid $grey;
+}
+
+.label {
+  color: $white;
+  background-color: $blue;
+  padding: $standard-padding;
+  font-size: $lg-font-size;
+  width: 100%;
+}
+
+.content {
+  padding: $xl-padding;
+}

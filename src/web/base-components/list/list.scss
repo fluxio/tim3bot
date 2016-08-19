@@ -1,0 +1,31 @@
+@import '../lib/styles/colours';
+@import '../lib/styles/flex';
+@import '../lib/styles/dimensions';
+
+.ordered {
+  padding: 0;
+
+  .listItem {
+    counter-increment: step-counter;
+    list-style-type: none;
+    margin: $sm-margin 0;
+    @include flex();
+
+    &:first-child,
+    &:last-child {
+      margin: 0;
+    }
+
+    &:before {
+      content: counter(step-counter);
+      margin-right: 20px;
+      border-radius: 50%;
+      border: 1px solid $black;
+      width: 1.5rem;
+      height: 1.5rem;
+      @include flex();
+      @include justify-content(center);
+      @include align-items(center);
+    }
+  }
+}

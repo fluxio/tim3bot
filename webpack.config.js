@@ -2,9 +2,16 @@ const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const values = require('postcss-modules-values');
 
 const webConfig = require('./config/web-config');
 const serverConfig = require('./config/server-config');
+
+const styleLoaders = [
+  'style',
+  'css?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]&postcss',
+  'sass?sourceMap',
+];
 
 const webpackConfig = {
   debug: serverConfig.DEBUG,
@@ -26,8 +33,8 @@ const webpackConfig = {
     }, {
       test: /\.scss$/,
       include: __dirname,
-      exclude: /node_modules/,
-      loader: ExtractTextPlugin.extract('style', 'css?sourceMap!sass?sourceMap'),
+      exclude: /node_modules(?!\/normalize)/,
+      loaders: serverConfig.DEBUG ? styleLoaders : [ExtractTextPlugin.extract(styleLoaders)],
     }, {
       test: /\.json$/,
       loader: 'json',
@@ -38,6 +45,9 @@ const webpackConfig = {
       loaders: ['file', 'image-webpack'],
     }],
   },
+  postcss: [
+    values,
+  ],
   plugins: [
     new ExtractTextPlugin('main.css', { allChunks: true }),
     new HtmlWebpackPlugin({

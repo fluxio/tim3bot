@@ -1,0 +1,24 @@
+@mixin flex() {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+@mixin shrink($value) {
+  flex-shrink: $value;
+}
+
+@mixin grow($value) {
+  flex-grow: $value;
+}
+
+@mixin no-wrap() {
+  flex-wrap: nowrap;
+}
+
+@mixin justify-content($value) {
+  justify-content: $value;
+}
+
+@mixin align-items($value) {
+  align-items: $value;
+}

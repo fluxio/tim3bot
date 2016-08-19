@@ -1,7 +1,12 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
+import { connect } from 'react-redux';
 
-import { fetchProfile } from '../api';
-import { LOGOUT_PATH } from '../lib/constants/paths';
+import DashboardView from '../components/dashboard-view';
+import {
+  fetchTasks,
+} from '../actions';
+import { getSortedTasks } from '../selectors';
+import { taskShape } from '../lib/shapes';
 
 class DashboardContainer extends Component {
   constructor(props) {
@@ -10,24 +15,29 @@ class DashboardContainer extends Component {
   }
 
   componentDidMount() {
-    fetchProfile()
-      .then(profile => {
-        this.setState({
-          user: profile,
-        });
-      });
+    this.props.fetchTasks();
   }
 
   render() {
-    const { user } = this.state;
+    const { tasks } = this.props;
 
-    return user ? (
-      <div>
-        Welcome to tim3bot, {user.name}!
-        <a href={LOGOUT_PATH}>Logout</a>
-      </div>
+    return tasks ? (
+      <DashboardView tasks={tasks} />
     ) : null;
   }
 }
 
-export default DashboardContainer;
+function mapStateToProps(state) {
+  return {
+    tasks: getSortedTasks(state),
+  };
+}
+
+DashboardContainer.propTypes = {
+  fetchTasks: PropTypes.func.isRequired,
+  tasks: PropTypes.arrayOf(taskShape).isRequired,
+};
+
+export default connect(mapStateToProps, {
+  fetchTasks,
+})(DashboardContainer);

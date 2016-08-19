@@ -3,6 +3,7 @@ import thunk from 'redux-thunk';
 import createLogger from 'redux-logger';
 import { routerMiddleware } from 'react-router-redux';
 
+import apiMiddleware from '../lib/middleware/api-middleware';
 import rootReducer from '../reducers/index';
 import DevTools from '../components/dev-tools';
 
@@ -13,6 +14,7 @@ function configureStore(history, initialState) {
     compose(
       applyMiddleware(
         thunk,
+        apiMiddleware,
         createLogger(),
         routerMiddleware(history)
       ),
