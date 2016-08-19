@@ -47,7 +47,7 @@ controller.hears(OPENERS, ['direct_message'], (bot, message) => {
 });
 
 controller.hears(LIST, ['direct_message'], (bot, message) => {
-  showTaskList(bot, message);
+  showTaskList(bot, message, null, true);
 });
 
 controller.hears(HELP, ['direct_message'], (bot, message) => {
@@ -64,10 +64,10 @@ controller.hears(ADD, ['direct_message'], (bot, message) => {
 
 controller.hears(CHECKIN, ['direct_message'], (bot, message) => {
   getUser(message.user).then(user => {
-    bot.reply(message, `Hey ${user.name}! Let's take a minute to review your progress.`);
-    showTaskList(bot, message, () => {
+    bot.reply(message, `:bellhop_bell:Hey ${user.name}! So, what have you been working on?`);
+  //  showTaskList(bot, message, () => {
       modifyTasks(bot, message);
-    });
+  //  });
   });
 });
 
@@ -75,14 +75,14 @@ controller.hears(CHECKIN, ['direct_message'], (bot, message) => {
 
 function modifyTasks(bot, message, callback) {
   const WHICH_TASK =
-      `Choose a task above that you've worked on, is complete, or that you'd like to delete. ` +
-      'Type `done` to end this checkin.';
+      '>Type a number to update the task, or use `exit` to end this check-in.';
 
   let tasks = null;
 
   getTasksForSlackUser(message.user).then(userTasks => {
     bot.startConversation(message, (response, conversation) => {
       tasks = userTasks;
+      showTaskList(bot, message);
       selectTask(response, conversation);
 
       conversation.on('end', convo => {
@@ -108,9 +108,9 @@ function modifyTasks(bot, message, callback) {
         convo.next();
       },
     }, {
-      pattern: 'done',
+      pattern: '[exit, done]',
       callback: (askResponse, convo) => {
-        convo.say('Thanks for checking in!');
+        convo.say('Thanks for checking in! Now get back to work! :stuck_out_tongue_winking_eye:\n>Remember to keep adding new tasks by typing `add`.');
         convo.next();
       },
     }, {
@@ -128,13 +128,13 @@ function modifyTasks(bot, message, callback) {
     let truncatedTitle = (titleBits.length > 4 ?
         titleBits.slice(0,4).join(' ') + '...' :
         task.title);
-    let prompt = `Add how much you worked on _"${truncatedTitle}"_, today, ` +
-        'e.g. `worked .5` if you spent a half day on it. ' +
-        'You can also mark the task `complete`, `delete` it, ' +
-        'or type `next` to update a different task.';
+    let prompt = `:stopwatch: OK. Let's update the status of this task.\n*${truncatedTitle}*\n` +
+        '>Log time by using days, e.g. `0.5`.\n>Type `complete` if it\'s done, ' +
+        '`delete` to remove the task, ' +
+        'or `next` to move on.';
 
     conversation.ask(prompt, [{
-      pattern: 'worked\\s+([0-9]*\.?[0-9]+).*',
+      pattern: '([0-9]*\.?[0-9]+).*',
       callback: (askResponse, convo) => {
         if (askResponse.match && askResponse.match[1]) {
           const daysSpent = parseFloat(askResponse.match[1]);
@@ -143,7 +143,9 @@ function modifyTasks(bot, message, callback) {
             data: { daysSpent: (task.daysSpent + daysSpent) },
           })
             .then(() => {
-              convo.repeat();
+              showTaskList(bot, message, () => {
+                selectTask(askResponse, convo);
+              });
               convo.next();
             });
         } else {
@@ -159,7 +161,9 @@ function modifyTasks(bot, message, callback) {
           data: { state: 'complete' },
         })
           .then(() => {
-            convo.repeat();
+            showTaskList(bot, message, () => {
+              selectTask(askResponse, convo);
+            });
             convo.next();
           });
       },
@@ -170,14 +174,18 @@ function modifyTasks(bot, message, callback) {
           query: { id: task.id },
         })
           .then(() => {
-            convo.repeat();
+            showTaskList(bot, message, () => {
+              selectTask(askResponse, convo);
+            });
             convo.next();
           });
       },
     }, {
       pattern: 'next',
       callback: (askResponse, convo) => {
-        selectTask(askResponse, convo);
+        showTaskList(bot, message, () => {
+          selectTask(askResponse, convo);
+        });
         convo.next();
       },
     }, {
@@ -314,8 +322,8 @@ function initializeTask(bot, message, taskString, callback) {
   }
 }
 
-function showTaskList(bot, message, callback) {
-  getTasksForSlackUser(message.user)
+function showTaskList(bot, message, callback, showComplete) {
+  getTasksForSlackUser(message.user, showComplete)
     .then(tasks => {
       if (tasks.length) {
         const taskList = tasks.map((task, index) => {
@@ -334,9 +342,11 @@ function showTaskList(bot, message, callback) {
               (task.state === 'complete' ? 'COMPLETED' : '')
         }).join('\n');
 
-        bot.reply(message, `Here’s what you've got on your plate right now:\n${taskList}`);
+        bot.reply(message, `This is what your list looks like right now:\n${taskList}`);
       } else {
-        bot.reply(message, "You don't have any tasks set up for the week yet.");
+        bot.reply(message, "You don't have any tasks. Use `add` to get started.");
+       // We should add a callback here to start the single initializeTask conversation
+       // initializeTask(askResponse, convo);
       }
     })
     .then(() => {
@@ -372,10 +382,10 @@ function getUser(slackId) {
   return userRepo.selectOne({ query: { slackId: slackId } });
 }
 
-function getTasksForUser(user) {
-  return taskRepo.select({ query: { userId: user.id } });
+function getTasksForUser(user, showCompleted) {
+  return taskRepo.select({ query: { userId: user.id, state: showCompleted ? null : 'incomplete' } });
 }
 
-function getTasksForSlackUser(slackId) {
-  return getUser(slackId).then(user => getTasksForUser(user));
+function getTasksForSlackUser(slackId, complete) {
+  return getUser(slackId).then(user => getTasksForUser(user, complete));
 }
