@@ -47,7 +47,7 @@ controller.hears(OPENERS, ['direct_message'], (bot, message) => {
 });
 
 controller.hears(LIST, ['direct_message'], (bot, message) => {
-  showTaskList(bot, message, null, true);
+  showTaskList(bot, message);
 });
 
 controller.hears(HELP, ['direct_message'], (bot, message) => {
@@ -158,7 +158,7 @@ function modifyTasks(bot, message, callback) {
       callback: (askResponse, convo) => {
         return taskRepo.update({
           query: { id: task.id },
-          data: { state: 'complete' },
+          data: { completed: true },
         })
           .then(() => {
             showTaskList(bot, message, () => {
@@ -174,9 +174,7 @@ function modifyTasks(bot, message, callback) {
           query: { id: task.id },
         })
           .then(() => {
-            showTaskList(bot, message, () => {
-              selectTask(askResponse, convo);
-            });
+            showTaskList(bot, message);
             convo.next();
           });
       },
@@ -322,8 +320,8 @@ function initializeTask(bot, message, taskString, callback) {
   }
 }
 
-function showTaskList(bot, message, callback, showComplete) {
-  getTasksForSlackUser(message.user, showComplete)
+function showTaskList(bot, message, callback) {
+  getTasksForSlackUser(message.user)
     .then(tasks => {
       if (tasks.length) {
         const taskList = tasks.map((task, index) => {
@@ -339,7 +337,7 @@ function showTaskList(bot, message, callback, showComplete) {
 
           }
           return `*${index + 1}. ${task.title}* \n\t_\(${workedStr}\)_ ` +
-              (task.state === 'complete' ? 'COMPLETED' : '')
+              (task.completed ? 'COMPLETED' : '')
         }).join('\n');
 
         bot.reply(message, `This is what your list looks like right now:\n${taskList}`);
@@ -382,10 +380,10 @@ function getUser(slackId) {
   return userRepo.selectOne({ query: { slackId: slackId } });
 }
 
-function getTasksForUser(user, showCompleted) {
-  return taskRepo.select({ query: { userId: user.id, state: showCompleted ? null : 'incomplete' } });
+function getTasksForUser(user) {
+  return taskRepo.select({ query: { userId: user.id } });
 }
 
-function getTasksForSlackUser(slackId, complete) {
-  return getUser(slackId).then(user => getTasksForUser(user, complete));
+function getTasksForSlackUser(slackId) {
+  return getUser(slackId).then(user => getTasksForUser(user));
 }
