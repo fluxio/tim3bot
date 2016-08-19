@@ -53,6 +53,16 @@ passport.deserializeUser((id, done) => {
     .then(user => done(null, user));
 });
 
+if (config.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.protocol.search(/https/) === -1) {
+      res.redirect(`https://${req.headers.host}${req.url}`);
+    } else {
+      next();
+    }
+  });
+}
+
 if (!config.DEBUG) {
   app.use(express.static(path.join(__dirname, 'public')));
   app.use('/public', express.static(path.join(__dirname, 'public')));

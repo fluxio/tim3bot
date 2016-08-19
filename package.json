@@ -19,6 +19,9 @@
     "test": "cross-env BABEL_ENV=commonjs mocha --compilers js:babel-register --recursive",
     "test:watch": "npm test -- --watch"
   },
+  "engines": {
+    "node": "6.4.0"
+  },
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.15.2",
