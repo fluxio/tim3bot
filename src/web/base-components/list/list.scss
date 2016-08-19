@@ -12,6 +12,7 @@
     list-style-type: none;
     margin: $sm-margin 0;
     @include flex();
+    width: 100%;
 
     &:first-child {
       margin: 0;

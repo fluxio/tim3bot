@@ -7,25 +7,49 @@ import { IN_PROGRESS } from '../../lib/constants/task-states';
 import styles from './task.scss';
 
 function pluralizeDays(numDays) {
-  return numDays === 1 ? 'day' : 'days';
+  return numDays === 1 ? `${numDays} day` : `${numDays} days`;
 }
 
-function Task({ task: { title, daysEstimated, state } }) {
-  const daysSpent = 3;
-  const description = `\
-${daysEstimated} ${pluralizeDays(daysEstimated)} estimated, \
-${daysSpent} ${pluralizeDays(daysSpent)} logged`;
-  const dangerWidth = daysSpent > daysEstimated ? ((daysSpent - daysEstimated) / daysSpent) * 100 : 0;
-  const warningWidth = dangerWidth ? 100 - dangerWidth : (2 / daysEstimated) * 100;
+function getDescription({ daysEstimated, daysSpent, completed }) {
+  let description = '';
 
-  const completedClassName = state === IN_PROGRESS ? styles.warningBar : styles.successBar;
+  if (!completed) {
+    const estimateLeft = daysEstimated - daysSpent;
+    description = `Logged ${pluralizeDays(daysSpent)}, \
+${pluralizeDays(estimateLeft)} of work remaining`;
+  } else if (daysSpent > daysEstimated) {
+    const daysOver = daysSpent - daysEstimated;
+
+    description = `Completed in ${pluralizeDays(daysSpent)}, \
+${pluralizeDays(daysOver)} over estimate`;
+  } else if (daysSpent < daysEstimated) {
+    const daysUnder = daysEstimated - daysSpent;
+
+    description = `Completed in ${pluralizeDays(daysSpent)}, \
+${pluralizeDays(daysUnder)} under estimate`;
+  } else {
+    description = `Completed in ${pluralizeDays()}, right on estimate \u{1f638}`;
+  }
+
+  return description;
+}
+
+function Task({ task }) {
+  const { title, daysEstimated, completed, daysSpent } = task;
+  const description = getDescription(task);
+  const barWidth = Math.max(daysSpent, daysEstimated) * 15;
+  const dangerWidth = daysSpent < daysEstimated ? 0 :
+    ((daysSpent - daysEstimated) / daysSpent) * 100;
+  const warningWidth = dangerWidth ? 100 - dangerWidth : (daysSpent / daysEstimated) * 100;
+
+  const completedClassName = completed ? styles.successBar : styles.warningBar;
 
   return (
     <ListItem>
       <div className={styles.title}>
         {title}
       </div>
-      <div className={styles.bar}>
+      <div className={styles.bar} style={{ width: `${barWidth}em` }}>
         <div className={completedClassName} style={{ width: `${warningWidth}%` }} />
         <div className={styles.dangerBar} style={{ width: `${dangerWidth}%` }} />
       </div>

@@ -15,7 +15,7 @@ const task = {
   createdAt: PropTypes.any.isRequired,
   daysEstimated: PropTypes.number.isRequired,
   daysSpent: PropTypes.number.isRequired,
-  state: PropTypes.oneOf(TASK_STATES).isRequired,
+  completed: PropTypes.bool.isRequired,
 };
 
 const taskShape = PropTypes.shape(task);
