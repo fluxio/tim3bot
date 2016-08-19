@@ -55,7 +55,15 @@ controller.hears(OPENERS, ['direct_message'], (bot, message) => {
 });
 
 controller.hears(LIST, ['direct_message'], (bot, message) => {
-  showTaskList(bot, message);
+  showTaskList(bot, message, () => {
+    getTasksForSlackUser(message.user, {incompleteOnly: true}).then(tasks => {
+      if (tasks.length > 0) {
+        bot.reply(message,
+          '>Remember, you can update your current tasks with `checkin`.\n' +
+          '>Now get back to work :stuck_out_tongue_winking_eye:');
+      }
+    })
+  });
 });
 
 controller.hears(HELP, ['direct_message'], (bot, message) => {
@@ -71,11 +79,15 @@ controller.hears(ADD, ['direct_message'], (bot, message) => {
 });
 
 controller.hears(CHECKIN, ['direct_message'], (bot, message) => {
-  getUser(message.user).then(user => {
-    bot.reply(message, `:bellhop_bell:Hey ${user.name}! So, what have you been working on?`);
-  //  showTaskList(bot, message, () => {
-      modifyTasks(bot, message);
-  //  });
+  getTasksForSlackUser(message.user, { incompleteOnly: true }).then(tasks => {
+    if (tasks.length > 0) {
+      getUser(message.user).then(user => {
+        bot.reply(message, `:bellhop_bell:Hey ${user.name}! So, what have you been working on?`);
+        modifyTasks(bot, message);
+      });
+    } else {
+      showTaskList(bot, message);
+    }
   });
 });
 
@@ -87,15 +99,16 @@ controller.hears(SCORE, ['direct_message'], (bot, message) => {
 
 function modifyTasks(bot, message, callback) {
   const WHICH_TASK =
-      '>Type a number to update the task, or use `exit` to end this check-in.';
+      '>Type a number to update the task, or `end` this check-in.';
 
   let tasks = null;
 
-  getTasksForSlackUser(message.user).then(userTasks => {
+  getTasksForSlackUser(message.user, { incompleteOnly: true }).then(tasks => {
     bot.startConversation(message, (response, conversation) => {
-      tasks = userTasks;
       showTaskList(bot, message);
-      selectTask(response, conversation);
+      if (tasks.length > 0) {
+        selectTask(response, conversation);
+      }
 
       conversation.on('end', convo => {
         if (convo.state === 'completed' && callback) {
@@ -107,32 +120,35 @@ function modifyTasks(bot, message, callback) {
   });
 
   function selectTask(response, conversation) {
-    conversation.ask(WHICH_TASK, [{
-      pattern: '([0-9]+)',
-      callback: (askResponse, convo) => {
-        const taskNumber = parseInt(askResponse.match[0]);
-        let task = tasks[taskNumber - 1];
-        if (!task) {
-          convo.say('Oops! Please indicate a valid task number.');
-        } else {
-          actOnTask(askResponse, convo, task);
-        }
-        convo.next();
-      },
-    }, {
-      pattern: '[exit, done]',
-      callback: (askResponse, convo) => {
-        convo.say('Thanks for checking in! Now get back to work! :stuck_out_tongue_winking_eye:\n>Remember to keep adding new tasks by typing `add`.');
-        convo.next();
-      },
-    }, {
-      pattern: '.*',
-      callback: (askResponse, convo) => {
-        convo.say('Oops! Please indicate a task number, e.g. `2` for the second task.');
-        convo.repeat();
-        convo.next();
-      },
-    }]);
+    getTasksForSlackUser(message.user, { incompleteOnly: true }).then(userTasks => {
+      tasks = userTasks;
+      conversation.ask(WHICH_TASK, [{
+        pattern: '([0-9]+)',
+        callback: (askResponse, convo) => {
+          const taskNumber = parseInt(askResponse.match[0]);
+          let task = tasks[taskNumber - 1];
+          if (!task) {
+            convo.say('Oops! Please indicate a valid task number.');
+          } else {
+            actOnTask(askResponse, convo, task);
+          }
+          convo.next();
+        },
+      }, {
+        pattern: '[end, done]',
+        callback: (askResponse, convo) => {
+          convo.say('Thanks for checking in! Now get back to work! :stuck_out_tongue_winking_eye:\n>Remember to keep adding new tasks by typing `add`.');
+          convo.next();
+        },
+      }, {
+        pattern: '.*',
+        callback: (askResponse, convo) => {
+          convo.say('Oops! Please indicate a task number, e.g. `2` for the second task.');
+          convo.repeat();
+          convo.next();
+        },
+      }]);
+    });
   }
 
   function actOnTask(response, conversation, task) {
@@ -141,9 +157,9 @@ function modifyTasks(bot, message, callback) {
         titleBits.slice(0,4).join(' ') + '...' :
         task.title);
     let prompt = `:stopwatch: OK. Let's update the status of this task.\n*${truncatedTitle}*\n` +
-        '>Log time by using days, e.g. `0.5`.\n>Type `complete` if it\'s done, ' +
-        '`delete` to remove the task, ' +
-        'or `next` to move on.';
+        '>Add time by using days, e.g. `0.5`.\n>Mark the task `done`, ' +
+        '`delete` it, ' +
+        'or go `back` to all tasks.';
 
     conversation.ask(prompt, [{
       pattern: '([0-9]*\.?[0-9]+).*',
@@ -166,7 +182,7 @@ function modifyTasks(bot, message, callback) {
         }
       },
     }, {
-      pattern: 'complete',
+      pattern: 'done',
       callback: (askResponse, convo) => {
         return taskRepo.update({
           query: { id: task.id },
@@ -191,7 +207,7 @@ function modifyTasks(bot, message, callback) {
           });
       },
     }, {
-      pattern: 'next',
+      pattern: 'back',
       callback: (askResponse, convo) => {
         showTaskList(bot, message, () => {
           selectTask(askResponse, convo);
@@ -211,7 +227,7 @@ function modifyTasks(bot, message, callback) {
 
 
 function initializeUser(bot, message, callback) {
-  const welcomeMessage = `Hi, I'm *TIM3BOT* :stopwatch:robot_face:stopwatch:
+  const welcomeMessage = `Hi, I'm *TIM3BOT* :stopwatch: :robot_face: :stopwatch:
 I'm gonna help you stay focused and improve your time estimations... \
 plus, I'll put an extra little spring in your step :dancer:`;
   let user = null;
@@ -373,9 +389,11 @@ function showScore(bot, message) {
     const score = computeScore(tasks);
     const grade = computeGrade(score);
     bot.reply(message,
-        'Based on your completed tasks, your *tim3bot certified reliability score* is... ' +
-        `:trophy:  *${score}% - ${grade}* :trophy:\n` +
-        completedTasksStr);
+        'Based on your completed tasks, your *TIM3BOT Certified Reliability Score* is...\n' +
+        `:trophy:  *${score}% - ${grade}* :trophy:\n\n` +
+        completedTasksStr + '\n' +
+        '>Remember, you can update your current tasks with `checkin`.\n' +
+        '>Now get back to work :stuck_out_tongue_winking_eye:');
   });
 }
 
@@ -386,7 +404,7 @@ function computeScore(tasks) {
     return totals;
   }, { totalEstimated: 0, totalSpent: 0 });
   if (totals.totalSpent === 0) {
-    return 1;
+    return 100;
   } else {
     return Math.round(totals.totalEstimated / totals.totalSpent * 100);
   }
