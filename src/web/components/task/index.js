@@ -37,7 +37,7 @@ ${pluralizeDays(daysUnder)} under estimate`;
 function Task({ task }) {
   const { title, daysEstimated, completed, daysSpent } = task;
   const description = getDescription(task);
-  const barWidth = Math.max(daysSpent, daysEstimated) * 15;
+  const barWidth = Math.min(Math.max(daysSpent, daysEstimated) * 15, 60);
   const dangerWidth = daysSpent < daysEstimated ? 0 :
     ((daysSpent - daysEstimated) / daysSpent) * 100;
   const warningWidth = dangerWidth ? 100 - dangerWidth : (daysSpent / daysEstimated) * 100;
