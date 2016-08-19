@@ -9,9 +9,11 @@ const serverConfig = require('./config/server-config');
 
 const styleLoaders = [
   'style',
-  'css?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]&postcss',
-  'sass?sourceMap',
+  'css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]&postcss',
+  'sass',
 ];
+
+const prodStyleLoaders = styleLoaders.slice(1);
 
 const webpackConfig = {
   debug: serverConfig.DEBUG,
@@ -19,8 +21,9 @@ const webpackConfig = {
   entry: ['./src/web/main.js'],
   output: {
     path: path.resolve(__dirname, './src/server/public'),
-    publicPath: serverConfig.HOT ? `http://${serverConfig.HOSTNAME}:${serverConfig.PROXY_PORT}/public/` : '/public/',
-    // publicPath: '/public/',
+    publicPath: serverConfig.HOT ?
+      `http://${serverConfig.HOSTNAME}:${serverConfig.PROXY_PORT}/public/` :
+      '/public/',
     filename: serverConfig.DEBUG ? '[name].js' : '[name].[hash].js',
     chunkFileName: '[id].js',
   },
@@ -34,7 +37,8 @@ const webpackConfig = {
       test: /\.scss$/,
       include: __dirname,
       exclude: /node_modules(?!\/normalize)/,
-      loaders: serverConfig.DEBUG ? styleLoaders : [ExtractTextPlugin.extract(styleLoaders)],
+      loader: serverConfig.DEBUG ? null : ExtractTextPlugin.extract('style', prodStyleLoaders),
+      loaders: serverConfig.DEBUG ? styleLoaders : null,
     }, {
       test: /\.json$/,
       loader: 'json',

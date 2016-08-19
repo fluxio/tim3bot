@@ -55,6 +55,7 @@ passport.deserializeUser((id, done) => {
 
 if (!config.DEBUG) {
   app.use(express.static(path.join(__dirname, 'public')));
+  app.use('/public', express.static(path.join(__dirname, 'public')));
 }
 
 app.use('/auth', authRouter);

@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack -d",
-    "build:min": "webpack -p",
-    "clean": "rimraf public",
+    "build:min": "cross-env NODE_ENV=production webpack -p",
+    "clean": "rimraf src/server/public",
     "lint": "eslint src test",
     "prepublish": "npm run clean && npm run build:min",
     "prestart": "knex migrate:latest",
