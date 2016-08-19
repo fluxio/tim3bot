@@ -44,7 +44,7 @@ class NewTask extends Component {
   }
 
   updateEstimate(e) {
-    const estimate = Number(e.target.value);
+    const estimate = e.target.value;
 
     this.setState({
       estimate,
