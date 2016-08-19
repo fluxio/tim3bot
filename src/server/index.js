@@ -55,7 +55,7 @@ passport.deserializeUser((id, done) => {
 
 if (config.NODE_ENV === 'production') {
   app.use((req, res, next) => {
-    if (req.protocol.search(/https/) === -1) {
+    if (req.protocol === 'http') {
       res.redirect(`https://${req.headers.host}${req.url}`);
     } else {
       next();
