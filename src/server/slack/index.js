@@ -6,25 +6,17 @@ const taskRepo = require('../repos/task-repo');
 
 const config = require('../../../config/server-config');
 
-// Conversation strings.
+// Command matching strings.
 const OPENERS = ['hi', 'yo', 'status'];
-const FIRST_TASK = "To get started, what's your highest priority task?";
-const SECOND_TASK = 'Thanks! What else is on your plate?';
-const THIRD_TASK = "Nice one! Let's add one more task.";
-const NTH_TASK = 'What do you want to add next?';
-
-const INITIALIZED_TASKS = `You can see your tasks by saying \`list\` at anytime.
-Use \`add\` to create new tasks. Type a number at the end to add an estimate, \
-e.g. \`add Fix the damn coffee machine 0.25\`.
-I’ll do a regular check-in on weekdays at 5pm, or use \`checkin\` at anytime.
-Type \`help\` to see a list of commands.
-That’s all for now. See you later! :spock-hand:`;
+const LIST = ['list', 'tasks'];
+const HELP = ['help', 'commands'];
+const ADD = ['add', 'addtask.*'];
+const CHECKIN = ['checkin', 'log', 'update'];
 
 const controller = Botkit.slackbot({
   debug: false,
   storage,
 });
-
 
 controller.spawn({ token: config.SLACK_API_TOKEN })
   .startRTM(err => {
@@ -33,6 +25,8 @@ controller.spawn({ token: config.SLACK_API_TOKEN })
     }
   });
 
+// Listeners for all commands.
+
 controller.hears(OPENERS, ['direct_message'], (bot, message) => {
   controller.storage.users.get(message.user, (err, user) => {
     if (!user) {
@@ -40,7 +34,7 @@ controller.hears(OPENERS, ['direct_message'], (bot, message) => {
     } else {
       bot.reply(message, `Welcome back, ${user.name}!`);
 
-      getTasksForUser(user)
+      getTasksForSlackUser(user.slackId)
         .then(tasks => {
           if (!tasks.length) {
             initializeTasksForUser(bot, message);
@@ -51,6 +45,35 @@ controller.hears(OPENERS, ['direct_message'], (bot, message) => {
     }
   });
 });
+
+controller.hears(LIST, ['direct_message'], (bot, message) => {
+  showTaskList(bot, message);
+});
+
+controller.hears(HELP, ['direct_message'], (bot, message) => {
+  showHelp(bot, message);
+});
+
+controller.hears(ADD, ['direct_message'], (bot, message) => {
+  showTaskList(bot, message, () => {
+    initializeTask(bot, message, null, () => {
+      showTaskList(bot, message);
+    });
+  });
+});
+
+controller.hears(CHECKIN, ['direct_message'], (bot, message) => {
+  getTasksForSlackUser(message.user).then(tasks => {
+    console.info(tasks);
+    // if (!tasks.length) {
+    //   initializeTasksForUser(bot, message);
+    // } else {
+    //   showTaskList(bot, message);
+    // }
+  });
+});
+
+// Helper functions for all ensuing conversations.
 
 function initializeUser(bot, message, callback) {
   const welcomeMessage = `Hi, I'm *TIM3BOT* :stopwatch:robot_face:stopwatch:
@@ -89,64 +112,59 @@ plus, I'll put an extra little spring in your step :dancer:`;
   });
 }
 
-function getTasksForUser(user) {
-  return taskRepo.select({ query: { userId: user.id } });
+function getUser(slackId) {
+  return userRepo.selectOne({ query: { slackId: slackId } });
 }
 
-controller.hears(['list', 'tasks'], ['direct_message'], (bot, message) => {
-  // Show status.
-  showTaskList(bot, message);
-});
-
-controller.hears(['help', 'commands'], ['direct_message'], (bot, message) => {
-  showHelp(bot, message);
-});
-
-// Add a single task.
-controller.hears(['add', 'addtask.*'], ['direct_message'], (bot, message) => {
-  showTaskList(bot, message, () => {
-    userRepo.selectOne({ query: { slackId: message.user } })
-      .then(user => {
-        initializeTask(bot, message, user, NTH_TASK);
-      });
-  });
-});
+function getTasksForSlackUser(slackId) {
+  return getUser(slackId).then(user => (
+    taskRepo.select({ query: { userId: user.id } })
+  ));
+}
 
 function initializeTasksForUser(bot, message, callback) {
-  userRepo.selectOne({ query: { slackId: message.user } })
-    .then(user => {
-      initializeTask(bot, message, user, FIRST_TASK, () => {
-        initializeTask(bot, message, user, SECOND_TASK, () => {
-          initializeTask(bot, message, user, THIRD_TASK, () => {
-            bot.reply(message, INITIALIZED_TASKS);
+  const FIRST_TASK = "To get started, what's your highest priority task?";
+  const SECOND_TASK = 'Thanks! What else is on your plate?';
+  const THIRD_TASK = "Nice one! Let's add one more task.";
+  const INITIALIZED_TASKS = `You can see your tasks by saying \`list\` at any time.
+Use \`add\` to create new tasks. Type a number at the end to add an estimate, \
+e.g. \`add Fix the damn coffee machine 0.25\`.
+I’ll do a regular check-in on weekdays at 5pm, or use \`checkin\` at anytime.
+Type \`help\` to see a list of commands.
+That’s all for now. See you later! :spock-hand:`;
 
-            if (callback) {
-              callback();
-            }
-          });
-        });
+  initializeTask(bot, message, FIRST_TASK, () => {
+    initializeTask(bot, message, SECOND_TASK, () => {
+      initializeTask(bot, message, THIRD_TASK, () => {
+        bot.reply(message, INITIALIZED_TASKS);
+
+        if (callback) {
+          callback();
+        }
       });
     });
+  });
 }
 
-function initializeTask(bot, message, user, taskString, callback) {
-  if (taskString) {
-    bot.reply(message, taskString);
-  }
+function initializeTask(bot, message, taskString, callback) {
+  taskString = taskString || 'What do you want to add next?';
+  bot.reply(message, taskString);
 
-  bot.startConversation(message, (err, conversation) => {
-    getTaskDescription(message, conversation);
+  getUser(message.user).then((user) => {
+    bot.startConversation(message, (err, conversation) => {
+      getTaskDescription(message, conversation, user);
 
-    conversation.on('end', convo => {
-      if (convo.status === 'completed' && callback) {
-        bot.reply(message, 'Great!');
+      conversation.on('end', convo => {
+        if (convo.status === 'completed' && callback) {
+          bot.reply(message, 'Great!');
 
-        callback();
-      }
+          callback();
+        }
+      });
     });
   });
 
-  function getTaskDescription(response, conversation) {
+  function getTaskDescription(response, conversation, user) {
     conversation.ask('...:lower_left_paintbrush:', [{
       pattern: '.*',
       callback: (askResponse, convo) => (
@@ -165,7 +183,7 @@ function initializeTask(bot, message, user, taskString, callback) {
   }
 
   function getTaskEstimate(response, conversation, task) {
-    conversation.ask('Great! How many days will this take, e.g. `2.5`.', [{
+    conversation.ask('Great! How many days will this take, e.g. `2.5`?', [{
       pattern: '.*([0-9]*\.?[0-9]+).*',
       callback: (askResponse, convo) => {
         const estimate = parseFloat(askResponse.match[0]);
@@ -190,10 +208,7 @@ function initializeTask(bot, message, user, taskString, callback) {
 }
 
 function showTaskList(bot, message, callback) {
-  userRepo.selectOne({ query: { slackId: message.user } })
-    .then(user => (
-      taskRepo.select({ query: { userId: user.id } })
-    ))
+  getTasksForSlackUser(message.user)
     .then(tasks => {
       if (tasks.length) {
         const taskList = tasks.map((task, index) => (
