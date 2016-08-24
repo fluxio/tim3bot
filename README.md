@@ -1,6 +1,12 @@
-# tim3bot
+# TIM3BOT
 
-### The manager you didn't know you want.
+### The manager you didn't know you wanted :)
+
+TIM3BOT is lightweight, conversational tool for tracking goals and time estimation
+across various teams here at Flux.io. It asks you to make ~3 large commitments to 
+your team per week, plus how many days of effort you believe each commitment 
+represents. TIM3BOT then checks in with you regularly and provides you a score so
+you can see your estimation efficiency week-to-week.
 
 ## Installation
 
@@ -41,15 +47,3 @@
 * `PROXY_PORT` *(optional, default: `4000`): The port for the server that you will access in the browser
 * `API_PORT` *(optional, default: `4001`, alias: `PORT`): The port for the main server
 * `STATIC_PORT` *(optional, default: `4002`): The port for the Webpack server
-
-## Development Notes
-
-... various things still to be documented, but here's a weirdness with the DB, for now.
-
-To get up and running, create an app on Heroku to get started. We already have one at
-Flux called tim3bot. Then:
- * Set the remote in your local directory: `heroku git:remote -a tim3bot`
- * Get the postGres connection URL with `heroku pg:credentials DATABASE`
- * Use the "Connection URL" in a command of this form:
-   `DATABASE_URL=<the connection url above>?ssl=true knex migrate:latest`. Don't
-   forget to add the ?ssl=true at the end, there.
